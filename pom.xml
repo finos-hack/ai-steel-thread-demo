@@ -3,7 +3,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.finos.fluxnova.ai</groupId>
-  <artifactId>agentic-subprocess-example</artifactId>
+  <artifactId>ai-steel-thread-demo</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <properties>

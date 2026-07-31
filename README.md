@@ -1,4 +1,4 @@
-# Agentic Subprocess Example
+# AI Steel Thread Demo
 
 Standalone Fluxnova Spring Boot demo for AI agentic ad-hoc subprocesses (loan approval).
 
@@ -22,7 +22,7 @@ export OPENAI_API_KEY=...
 mvn spring-boot:run
 ```
 
-Then deploy `LoanApprovalProcess_AI` from Fluxnova Modeler (auto-deployment expects the BPMN on the engine), and start a demo instance:
+Then deploy `LoanApprovalProcess_AI` from Fluxnova Modeler, and start a demo instance:
 
 ```bash
 curl -X POST 'http://localhost:8080/api/demo/loan-approval/start-with-sample-id'

@@ -22,7 +22,7 @@ fluxnova.loan-approval-demo:
   sample-id-cards-pattern: classpath:sample/sample-id-card*.png
 spring:
   application:
-    name: agentic-subprocess-example
+    name: ai-steel-thread-demo
   mvc:
     problemdetails:
       enabled: true
