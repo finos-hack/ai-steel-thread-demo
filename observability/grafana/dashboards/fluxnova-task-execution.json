@@ -484,7 +484,7 @@
         {
           "datasource": { "type": "tempo", "uid": "tempo" },
           "limit": 20,
-          "query": "{ resource.service.name = \"agentic-subprocess-example\" && name = \"fluxnova.external-task\" }",
+          "query": "{ resource.service.name = \"ai-steel-thread-demo\" && name = \"fluxnova.external-task\" }",
           "queryType": "traceql",
           "refId": "A",
           "tableType": "traces"
