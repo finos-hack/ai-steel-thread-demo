@@ -1,0 +1,63 @@
+fluxnova.bpm:
+  admin-user:
+    id: demo
+    password: demo
+    firstName: Demo
+  filter:
+    create: All tasks
+  auto-deployment-enabled: true
+fluxnova.observability:
+  enabled: true
+  business:
+    enabled: true
+    workflow-name-prefix: LoanApproval
+fluxnova.document-intelligence:
+  model: gpt-5.4
+  attached-file-variable: attachedFile
+  workflow: LoanApprovalProcess_AI
+  telemetry-task: document-intelligence
+  provider: openai
+fluxnova.loan-approval-demo:
+  process-definition-key: LoanApprovalProcess_AI
+  sample-id-cards-pattern: classpath:sample/sample-id-card*.png
+spring:
+  application:
+    name: agentic-subprocess-example
+  mvc:
+    problemdetails:
+      enabled: true
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          # GPT-5 reasoning models reject any temperature other than 1.
+          temperature: 1
+management:
+  tracing:
+    export:
+      enabled: true
+    sampling:
+      probability: 1.0
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://127.0.0.1:4318/v1/traces}
+  logging:
+    export:
+      otlp:
+        enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+logging:
+  level:
+    org.finos.fluxnova.bpm.engine.ai.agent: DEBUG
+    org.finos.fluxnova.bpm.client.spring: INFO
+    org.finos.fluxnova.worker: INFO
