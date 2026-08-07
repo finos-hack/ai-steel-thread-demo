@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-steel-thread.local/control-requirement/mi-5-system-acceptance-testing",
+  "title": "System Acceptance Testing (FINOS AIGF mi-5)",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "https://calm.finos.org/release/1.2/meta/control-requirement.json"
+    }
+  ],
+  "properties": {
+    "control-id": {
+      "const": "mi-5"
+    },
+    "name": {
+      "const": "System Acceptance Testing"
+    },
+    "description": {
+      "type": "string"
+    },
+    "aigf-catalog-url": {
+      "type": "string"
+    },
+    "pass-rate-threshold": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Minimum fraction of acceptance cases that must pass"
+    },
+    "tolerate-output-variability": {
+      "type": "boolean",
+      "description": "Use soft assertions / quality thresholds rather than exact LLM string match"
+    },
+    "criteria-categories": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["acceptance-suite", "decision-policy", "dlp-invariants", "document-validity"]
+    }
+  },
+  "required": ["control-id", "name", "description"]
+}

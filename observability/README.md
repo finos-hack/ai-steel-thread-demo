@@ -18,6 +18,8 @@ mvn spring-boot:run
 open http://localhost:3000
 ```
 
+On macOS, run Compose from the correctly cased path (`/Users/.../Documents/...`). A lowercased cwd (`/users/.../documents/...`) makes Docker Desktop reject bind mounts as “not shared”.
+
 ## Verify metrics pipeline
 
 ```bash
@@ -32,12 +34,15 @@ curl -s 'http://localhost:9090/api/v1/query?query=fluxnova_task_executions_total
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
+| `Mounts denied` / path `... is not shared` | Bind mount resolved with lowercased `/users/.../documents/...`, or path missing from Docker Desktop file sharing | `cd` to `/Users/.../Documents/.../observability` (correct case) and re-run; or add `/Users` (or this repo) under Docker Desktop → Settings → Resources → File Sharing |
 | No `fluxnova_task_*` metrics | App not restarted after observability fix, or no tasks executed yet | Restart app, redeploy BPMN, run a process instance |
 | Prometheus target down | App not running on port 8080 | Start the app |
 | Traces panel empty | Custom spans not exported (`OpenTelemetryTracingSupport` bean missing due to config order), Tempo not running, or no external tasks executed yet | Restart app after observability fix; `docker compose up -d`; run demo process; filter traces panel by `document-intelligence` in Tempo Explore if needed |
 | `ConnectException: ... :4318` in app logs | Tempo not running while tracing is enabled | Start observability stack before (or with) the app |
+| `OtlpHttpMetricsSendUnsuccessfulException` / HTTP 404 | OTLP metrics export pointed at Tempo (traces-only) | Keep `management.otlp.metrics.export.enabled=false`; use Prometheus for metrics |
 | Activity metrics missing | Process deployed before observability plugin loaded | Redeploy BPMN from Modeler after app restart |
 | Dashboard filters show no options | Old dashboard used Prometheus-only variables | Re-import dashboard from `grafana/dashboards/` |
+| `ACT_FK_VAR_EXE` when credit-score tool runs | Agentic ad-hoc auto-completed after sync tool (no `completionCondition`) | Restart app and **redeploy** BPMN so `AgentAdHocCompletionGuard` applies; or set `<completionCondition>${false}</completionCondition>` on the agent ad-hoc in Modeler |
 
 ## Metrics
 
@@ -76,7 +81,7 @@ These variables are also updated on the process instance **after each agent step
 
 **Note:** Agent **context variables** in the Modeler (`agent:context`) declare which process variables the model **reads as input**. They do not capture model output. Do not add the conversation there — the trace variables above are written automatically.
 
-Open Grafana dashboard **Fluxnova Loan Approval Business** after running demo processes.
+Open Grafana dashboard **Loan Approval Business** after running demo processes.
 
 Incomplete applications are derived as started minus completed, or `outcome=incomplete` when a process ends without an approval decision.
 
@@ -85,10 +90,14 @@ Incomplete applications are derived as started minus completed, or `outcome=inco
 | Metric | Labels |
 |--------|--------|
 | `fluxnova_llm_tokens_total` | `workflow`, `task`, `model`, `provider`, `token_type` (`prompt` / `completion`) |
-| `fluxnova_llm_calls_total` | `workflow`, `task`, `model`, `provider` |
+| `fluxnova_llm_calls_total` | `workflow`, `task`, `model`, `provider`, `status` (`success` / `failure`) |
+| `fluxnova_llm_duration_seconds` | `workflow`, `task`, `model`, `provider`, `model_version` |
+| `fluxnova_llm_errors_total` | `workflow`, `task`, `model`, `provider`, `error_type` |
 
-Token usage is logged at INFO on each agent LLM call:
+These implement FINOS AIGF **mi-4** (AI System Observability). Configure with `fluxnova.observability.mi-4.*`. Open Grafana dashboard **Observability**.
+
+Sanitized LLM audit is logged at INFO on each call (no raw prompts/media):
 
 ```
-LLM tokens workflow=LoanApprovalProcess_AI task=AgentTask_CreditRisk provider=... model=... prompt=... completion=... total=...
+LLM audit workflow=LoanApprovalProcess_AI task=AgentTask_CreditRisk provider=... model=... version=... durationMs=... status=success promptTokens=... completionTokens=... totalTokens=... contextKeys=... errorType=-
 ```

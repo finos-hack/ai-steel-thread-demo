@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-steel-thread.local/control-requirement/mi-1-ai-data-leakage-prevention",
+  "title": "AI Data Leakage Prevention and Detection (FINOS AIGF mi-1)",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "https://calm.finos.org/release/1.2/meta/control-requirement.json"
+    }
+  ],
+  "properties": {
+    "control-id": {
+      "const": "mi-1"
+    },
+    "name": {
+      "const": "AI Data Leakage Prevention and Detection"
+    },
+    "description": {
+      "type": "string"
+    },
+    "aigf-catalog-url": {
+      "type": "string",
+      "description": "Link to the FINOS AI Governance Framework mitigation page"
+    },
+    "data-minimization": {
+      "type": "boolean",
+      "description": "Only transmit data strictly necessary for the AI task"
+    },
+    "tls-required": {
+      "type": "boolean",
+      "description": "Require TLS for all LLM session data in transit"
+    },
+    "tsp-no-training": {
+      "type": "boolean",
+      "description": "TSP must not train foundation models on institution session data"
+    },
+    "tsp-zero-or-minimal-persistence": {
+      "type": "boolean",
+      "description": "TSP must use zero or time-bounded persistence for prompts/responses"
+    },
+    "prefer-private-endpoint": {
+      "type": "boolean",
+      "description": "Prefer private/VPC endpoints over public internet when available"
+    },
+    "egress-audit": {
+      "type": "boolean",
+      "description": "Log and retain audit of data categories leaving the trust boundary"
+    },
+    "forbid-logging-raw-media": {
+      "type": "boolean",
+      "description": "Do not write raw identity document media into application or observability logs"
+    },
+    "sanitize-conversation-traces": {
+      "type": "boolean",
+      "description": "Redact PII from agent conversation traces exposed to UIs and dashboards"
+    },
+    "forbid-unapproved-callers": {
+      "type": "boolean",
+      "description": "Only approved application components may call the hosted model API"
+    },
+    "edge-type": {
+      "type": "string",
+      "enum": ["document-intelligence-egress", "agent-llm-egress", "tsp-boundary"],
+      "description": "Class of architectural edge this control instance applies to"
+    },
+    "purpose": {
+      "type": "string",
+      "description": "Approved business purpose for this egress"
+    },
+    "session-data-classification": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Data classifications that may cross this boundary when authorized"
+    },
+    "allowed-egress-categories": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Categories of data permitted to leave toward the hosted model"
+    },
+    "forbidden-egress-categories": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Categories of data that must never leave toward the hosted model on this path"
+    },
+    "context-allowlist": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Process variable names the credit-risk agent may include in LLM context"
+    },
+    "egress-allowlist-hosts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Approved LLM provider hostnames"
+    }
+  },
+  "required": ["control-id", "name", "description"]
+}

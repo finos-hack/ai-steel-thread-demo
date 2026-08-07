@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-steel-thread.local/control-requirement/mi-11-human-feedback-loop",
+  "title": "Human Feedback Loop for AI Systems (FINOS AIGF mi-11)",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "https://calm.finos.org/release/1.2/meta/control-requirement.json"
+    }
+  ],
+  "properties": {
+    "control-id": {
+      "const": "mi-11"
+    },
+    "name": {
+      "const": "Human Feedback Loop for AI Systems"
+    },
+    "description": {
+      "type": "string"
+    },
+    "aigf-catalog-url": {
+      "type": "string"
+    },
+    "bpmn-activity-id": {
+      "type": "string",
+      "description": "BPMN user task that captures loan officer feedback"
+    },
+    "decision-variable": {
+      "type": "string",
+      "description": "Process variable that gates Gateway_6 after human review"
+    },
+    "form-ref": {
+      "type": "string",
+      "description": "Cockpit/Tasklist form reference for alternate completion"
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["loan-officer-review", "manual-review-path", "structured-feedback"]
+    }
+  },
+  "required": ["control-id", "name", "description"]
+}

@@ -5,9 +5,25 @@ fluxnova.bpm:
     firstName: Demo
   filter:
     create: All tasks
+  # Deploys classpath BPMN/DMN/forms (LoanApprovalProcess_AI + credit_approval_review)
   auto-deployment-enabled: true
+  deployment-resource-pattern:
+    - classpath*:**/*.bpmn
+    - classpath*:**/*.bpmn20.xml
+    - classpath*:**/*.dmn
+    - classpath*:**/*.dmn11.xml
+    - classpath*:**/*.cmmn
+    - classpath*:**/*.cmmn10.xml
+    - classpath*:**/*.cmmn11.xml
+    - classpath*:**/*.form
 fluxnova.observability:
   enabled: true
+  mi-4:
+    enabled: true
+    sanitized-audit-log: true
+    persist-call-metadata: true
+    model-version-label: gpt-5.4
+    grafana-base-url: http://localhost:3000
   business:
     enabled: true
     workflow-name-prefix: LoanApproval
@@ -17,6 +33,51 @@ fluxnova.document-intelligence:
   workflow: LoanApprovalProcess_AI
   telemetry-task: document-intelligence
   provider: openai
+# FINOS AIGF mi-1 — AI Data Leakage Prevention (enforced at LLM egress + status API)
+fluxnova.dlp.mi-1:
+  enabled: true
+  strict: false
+  redact-status-api: true
+# FINOS AIGF mi-5 — System Acceptance Testing (deterministic SAT suite)
+fluxnova.acceptance.mi-5:
+  enabled: true
+  pass-rate-threshold: 0.9
+# FINOS AIGF mi-11 — Human Feedback Loop (loan officer user task)
+fluxnova.feedback.mi-11:
+  enabled: true
+  loan-officer-task-definition-key: UserTask_LoanOfficerReview
+# AI tokenomics control plane (estimated USD from rate card)
+fluxnova.tokenomics:
+  enabled: true
+  currency: USD
+  use-case-map:
+    LoanApprovalProcess_AI: loan-approval
+  rates:
+    - provider: openai
+      model: gpt-5.4
+      prompt-per-1m: 2.50
+      completion-per-1m: 15.00
+      cache-input-per-1m: 0.25
+      cache-write-per-1m: 0.0
+    - provider: openai
+      model: gpt-5.6-luna
+      prompt-per-1m: 0.20
+      completion-per-1m: 1.20
+      cache-input-per-1m: 0.02
+      cache-write-per-1m: 0.25
+    - provider: anthropic
+      model: claude-sonnet-5
+      prompt-per-1m: 3.00
+      completion-per-1m: 15.00
+      cache-input-per-1m: 0.20
+      cache-write-per-1m: 2.50
+  budgets:
+    - use-case: loan-approval
+      period: monthly
+      limit-usd: 1.00
+      warn-at: 0.8
+      hard-limit: false
+  grafana-dashboard-path: /d/fluxnova-ai-observability/fluxnova-ai-observability
 fluxnova.loan-approval-demo:
   process-definition-key: LoanApprovalProcess_AI
   sample-id-cards-pattern: classpath:sample/sample-id-card*.png
@@ -33,6 +94,11 @@ spring:
         options:
           # GPT-5 reasoning models reject any temperature other than 1.
           temperature: 1
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY}
+      chat:
+        options:
+          model: claude-sonnet-5
 management:
   tracing:
     export:
@@ -43,6 +109,11 @@ management:
     export:
       prometheus:
         enabled: true
+  # Tempo only accepts OTLP traces. Metrics go to Prometheus scrape (/actuator/prometheus).
+  otlp:
+    metrics:
+      export:
+        enabled: false
   opentelemetry:
     tracing:
       export:
@@ -60,4 +131,4 @@ logging:
   level:
     org.finos.fluxnova.bpm.engine.ai.agent: DEBUG
     org.finos.fluxnova.bpm.client.spring: INFO
-    org.finos.fluxnova.worker: INFO
+    org.finos.ai.demo.worker: INFO

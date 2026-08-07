@@ -2,7 +2,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.finos.fluxnova.ai</groupId>
+  <groupId>org.finos.ai.demo</groupId>
   <artifactId>ai-steel-thread-demo</artifactId>
   <version>1.0-SNAPSHOT</version>
 
@@ -48,6 +48,14 @@
     <dependency>
       <groupId>org.finos.fluxnova.bpm.springboot</groupId>
       <artifactId>fluxnova-bpm-spring-boot-starter-rest</artifactId>
+      <exclusions>
+        <!-- Fluxnova still ships jackson-datatype-jsr310 3.0.0-rc2; incompatible with Jackson 3.1.x
+             (WRITE_DATES_AS_TIMESTAMPS moved to DateTimeFeature). Java time is in jackson-databind. -->
+        <exclusion>
+          <groupId>tools.jackson.datatype</groupId>
+          <artifactId>jackson-datatype-jsr310</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.finos.fluxnova.bpm.springboot</groupId>
@@ -73,9 +81,13 @@
       <type>pom</type>
     </dependency>
 
-    <dependency>
+      <dependency>
       <groupId>org.springframework.ai</groupId>
       <artifactId>spring-ai-starter-model-openai</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ai</groupId>
+      <artifactId>spring-ai-starter-model-anthropic</artifactId>
     </dependency>
 
     <!-- OpenTelemetry observability (Spring Boot 4 modular starters) -->
@@ -94,6 +106,13 @@
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
+
+    <!-- PDF export for per-instance compliance evidence -->
+    <dependency>
+      <groupId>com.github.librepdf</groupId>
+      <artifactId>openpdf</artifactId>
+      <version>2.0.3</version>
     </dependency>
 
     <dependency>
@@ -119,6 +138,16 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <version>${spring-boot.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <mainClass>org.finos.ai.demo.Application</mainClass>
+        </configuration>
       </plugin>
     </plugins>
   </build>

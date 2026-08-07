@@ -1,0 +1,126 @@
+{
+  "components": [
+    {
+      "label": "Last Name",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_15dft00",
+        "columns": null
+      },
+      "id": "Field_04w8oe3",
+      "key": "lastName",
+      "readonly": true
+    },
+    {
+      "label": "First Name",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_15dft00",
+        "columns": null
+      },
+      "id": "Field_1m7h4eh",
+      "key": "firstName",
+      "readonly": true
+    },
+    {
+      "type": "separator",
+      "layout": {
+        "row": "Row_1i4r8ek",
+        "columns": null
+      },
+      "id": "Field_1adgu96"
+    },
+    {
+      "label": "Requested Amount",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_1o68mer",
+        "columns": null
+      },
+      "id": "Field_0svvkim",
+      "key": "requestedAmount",
+      "readonly": true
+    },
+    {
+      "label": "Loan Purpose",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_1o68mer",
+        "columns": null
+      },
+      "id": "Field_0pc4plb",
+      "key": "loanPurpose",
+      "readonly": true
+    },
+    {
+      "label": "Credit Score",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_1dwemuj",
+        "columns": null
+      },
+      "id": "Field_07kp47a",
+      "key": "creditScore",
+      "readonly": true
+    },
+    {
+      "label": "Risk Score",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_1dwemuj",
+        "columns": null
+      },
+      "id": "Field_0a5umiy",
+      "key": "aiRiskScore",
+      "readonly": true
+    },
+    {
+      "type": "separator",
+      "layout": {
+        "row": "Row_02hastf",
+        "columns": null
+      },
+      "id": "Field_0ggyjv1"
+    },
+    {
+      "label": "Decision",
+      "values": [
+        {
+          "label": "Approve",
+          "value": "APPROVE"
+        },
+        {
+          "label": "Reject",
+          "value": "REJECT"
+        }
+      ],
+      "type": "radio",
+      "layout": {
+        "row": "Row_0g7uca6",
+        "columns": null
+      },
+      "id": "Field_1qy4xhm",
+      "key": "loanOfficerDecision",
+      "defaultValue": "REJECT"
+    },
+    {
+      "label": "Submit Decision",
+      "action": "submit",
+      "type": "button",
+      "layout": {
+        "row": "Row_0ce268r",
+        "columns": null
+      },
+      "id": "Field_0toluac"
+    }
+  ],
+  "type": "default",
+  "id": "credit_approval_review",
+  "exporter": {
+    "name": "Fluxnova Modeler",
+    "version": "1.2.0-dev"
+  },
+  "executionPlatform": "Fluxnova Platform",
+  "executionPlatformVersion": "2.0.0",
+  "schemaVersion": 18
+}

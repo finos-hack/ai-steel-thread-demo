@@ -1,0 +1,1710 @@
+{
+  "$schema": "https://calm.finos.org/release/1.2/meta/calm.json",
+  "$id": "http://localhost:8090/calm/namespaces/finos/architectures/loan-approval/versions/1.0.0",
+  "unique-id": "ai-steel-thread-loan-approval",
+  "name": "AI Steel Thread \u2014 Loan Approval",
+  "description": "CALM architecture for the FINOS Fluxnova AI Steel Thread demo implementing the FINOS AI Governance Framework UC-3 Loan Approval use case. Captures the Spring Boot host, Fluxnova engine surfaces, agentic ad-hoc subprocess runtime, external-task workers, Spring AI / OpenAI provider and models, launch UI, and local observability stack.",
+  "metadata": [
+    {
+      "finos-use-case": "uc-3_loan-approval",
+      "finos-use-case-url": "https://github.com/finos/ai-governance-framework/blob/main/docs/_usecases/uc-3_loan-approval.md",
+      "finos-ai-governance-catalog": "https://air-governance-framework.finos.org/",
+      "process-definition-key": "LoanApprovalProcess_AI",
+      "application": "ai-steel-thread-demo",
+      "runtime": "Java 21 / Spring Boot 4 / Fluxnova BPM 3",
+      "aigf-mitigations": [
+        "mi-1",
+        "mi-4",
+        "mi-5",
+        "mi-11"
+      ],
+      "aigf-risks": [
+        "ri-1"
+      ],
+      "note": "BPMN is deployed from Fluxnova Modeler (not versioned in this repo). Credit-risk agent provider/model are declared on AgentTask_CreditRisk via agent:config and resolved at runtime by AgentProviderRegistry \u2192 SpringAiLlmService. mi-1 AI data-leakage controls are attached to OpenAI boundary nodes/edges and the LLM callers; architecture controls declare policy intent and do not by themselves enforce runtime DLP. mi-4 AI system observability controls are attached to LLM callers and the observability stack; runtime metrics/audit live in org.finos.ai.demo.observability. mi-5 system acceptance testing is attached to the demo API and AI decision paths; runtime suite lives in org.finos.ai.demo.acceptance. mi-11 human feedback is attached to the demo API, launch UI, Cockpit, and loan-officer actor; runtime lives in org.finos.ai.demo.feedback and completes the existing BPMN user task."
+    }
+  ],
+  "nodes": [
+    {
+      "unique-id": "loan-applicant",
+      "node-type": "actor",
+      "name": "Loan Applicant",
+      "description": "End customer submitting identity and financial documents for a loan application"
+    },
+    {
+      "unique-id": "loan-officer",
+      "node-type": "actor",
+      "name": "Loan Officer",
+      "description": "Primary underwriting user who starts demo instances, reviews AI recommendations, and records loanOfficerDecision on human tasks",
+      "controls": {
+        "human-feedback-loop": {
+          "description": "FINOS AIGF mi-11: loan officer completes UserTask_LoanOfficerReview with loanOfficerDecision and structured feedback.",
+          "aigf-mitigations": [
+            "mi-11"
+          ],
+          "aigf-risks": [
+            "ri-1",
+            "ri-6"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-11-human-feedback-loop",
+              "config": {
+                "control-id": "mi-11",
+                "name": "Human Feedback Loop for AI Systems",
+                "description": "Capture human loan-officer decisions and agree/disagree feedback on MANUAL_REVIEW paths via UserTask_LoanOfficerReview (FINOS AIGF mi-11).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-11_human-feedback-loop-for-ai-systems.html",
+                "bpmn-activity-id": "UserTask_LoanOfficerReview",
+                "decision-variable": "loanOfficerDecision",
+                "form-ref": "credit_approval_review",
+                "scope": "loan-officer-review"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "compliance-officer",
+      "node-type": "actor",
+      "name": "Compliance Officer",
+      "description": "Secondary reviewer for fraud-flagged or high-risk cases routed to compliance checkpoints"
+    },
+    {
+      "unique-id": "loan-approval-ecosystem",
+      "node-type": "ecosystem",
+      "name": "Loan Approval Demo Ecosystem",
+      "description": "Local demo topology spanning launch UI, Fluxnova Spring Boot application, hosted LLM provider, and observability stack"
+    },
+    {
+      "unique-id": "launch-ui",
+      "node-type": "webclient",
+      "name": "Launch UI",
+      "description": "Vite + React 19 TypeScript UI for selecting the Loan Approval use case, starting process instances, viewing FINOS governance metadata, and polling execution status / LLM token usage",
+      "development-language": "TypeScript",
+      "interfaces": [
+        {
+          "unique-id": "launch-ui-http",
+          "type": "host-port-interface",
+          "host": "localhost",
+          "port": 5173
+        }
+      ],
+      "metadata": {
+        "path": "frontend/",
+        "proxy": "/api \u2192 http://localhost:8080"
+      },
+      "controls": {
+        "human-feedback-loop": {
+          "description": "FINOS AIGF mi-11: loan officer completes UserTask_LoanOfficerReview with loanOfficerDecision and structured feedback.",
+          "aigf-mitigations": [
+            "mi-11"
+          ],
+          "aigf-risks": [
+            "ri-1",
+            "ri-6"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-11-human-feedback-loop",
+              "config": {
+                "control-id": "mi-11",
+                "name": "Human Feedback Loop for AI Systems",
+                "description": "Capture human loan-officer decisions and agree/disagree feedback on MANUAL_REVIEW paths via UserTask_LoanOfficerReview (FINOS AIGF mi-11).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-11_human-feedback-loop-for-ai-systems.html",
+                "bpmn-activity-id": "UserTask_LoanOfficerReview",
+                "decision-variable": "loanOfficerDecision",
+                "form-ref": "credit_approval_review",
+                "scope": "loan-officer-review"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "fluxnova-spring-boot-app",
+      "node-type": "system",
+      "name": "Fluxnova Spring Boot Application",
+      "description": "Single JVM hosting the process engine, REST/Cockpit surfaces, demo API, external-task client, agentic plugin, Spring AI LLM bridge, and domain workers",
+      "development-language": "Java",
+      "interfaces": [
+        {
+          "unique-id": "app-http",
+          "type": "host-port-interface",
+          "host": "localhost",
+          "port": 8080
+        }
+      ],
+      "metadata": {
+        "spring-application-name": "ai-steel-thread-demo",
+        "entry-point": "org.finos.ai.demo.Application"
+      }
+    },
+    {
+      "unique-id": "loan-approval-demo-api",
+      "node-type": "service",
+      "name": "Loan Approval Demo API",
+      "description": "Demo REST controllers under /api/demo/loan-approval for options, start, instance listing, and process status (activity history, variables, token usage); human-review / human-feedback for mi-11",
+      "interfaces": [
+        {
+          "unique-id": "demo-rest-api",
+          "type": "api",
+          "path": "/api/demo/loan-approval"
+        }
+      ],
+      "metadata": {
+        "controller": "LoanApprovalDemoController",
+        "service": "LoanApprovalDemoService"
+      },
+      "controls": {
+        "system-acceptance-testing": {
+          "description": "FINOS AIGF mi-5: demo API exposes and runs the system acceptance suite.",
+          "aigf-mitigations": [
+            "mi-5"
+          ],
+          "aigf-risks": [
+            "ri-4",
+            "ri-6",
+            "ri-14"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-5-system-acceptance-testing",
+              "config": {
+                "control-id": "mi-5",
+                "name": "System Acceptance Testing",
+                "description": "Validate loan-approval AI paths against acceptance criteria with a pass-rate threshold that tolerates LLM output variability (FINOS AIGF mi-5).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-5_system-acceptance-testing.html",
+                "pass-rate-threshold": 0.9,
+                "tolerate-output-variability": true,
+                "criteria-categories": [
+                  "credit-risk-bands",
+                  "approval-decision",
+                  "mi-1-dlp",
+                  "loan-application-bounds",
+                  "document-validity"
+                ],
+                "scope": "acceptance-suite"
+              }
+            }
+          ]
+        },
+        "human-feedback-loop": {
+          "description": "FINOS AIGF mi-11: loan officer completes UserTask_LoanOfficerReview with loanOfficerDecision and structured feedback.",
+          "aigf-mitigations": [
+            "mi-11"
+          ],
+          "aigf-risks": [
+            "ri-1",
+            "ri-6"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-11-human-feedback-loop",
+              "config": {
+                "control-id": "mi-11",
+                "name": "Human Feedback Loop for AI Systems",
+                "description": "Capture human loan-officer decisions and agree/disagree feedback on MANUAL_REVIEW paths via UserTask_LoanOfficerReview (FINOS AIGF mi-11).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-11_human-feedback-loop-for-ai-systems.html",
+                "bpmn-activity-id": "UserTask_LoanOfficerReview",
+                "decision-variable": "loanOfficerDecision",
+                "form-ref": "credit_approval_review",
+                "scope": "loan-officer-review"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "fluxnova-process-engine",
+      "node-type": "service",
+      "name": "Fluxnova Process Engine",
+      "description": "BPMN 2.0 process engine executing LoanApprovalProcess_AI, including user tasks, service tasks, gateways, and agentic ad-hoc subprocesses",
+      "metadata": {
+        "process-key": "LoanApprovalProcess_AI",
+        "admin-user": "demo",
+        "auto-deployment-enabled": true,
+        "loan-officer-task": "UserTask_LoanOfficerReview",
+        "manual-review-gateway": "Gateway_5"
+      }
+    },
+    {
+      "unique-id": "fluxnova-job-executor",
+      "node-type": "service",
+      "name": "Fluxnova Job Executor",
+      "description": "Asynchronous job executor that drives timer/async continuations and agent orchestration turns for AgentTask_CreditRisk"
+    },
+    {
+      "unique-id": "fluxnova-engine-rest",
+      "node-type": "service",
+      "name": "Fluxnova Engine REST API",
+      "description": "Official process-engine REST API used by Cockpit, the external-task client, and tooling",
+      "interfaces": [
+        {
+          "unique-id": "engine-rest-api",
+          "type": "api",
+          "path": "/engine-rest"
+        }
+      ]
+    },
+    {
+      "unique-id": "fluxnova-cockpit",
+      "node-type": "webclient",
+      "name": "Fluxnova Cockpit / Tasklist / Admin",
+      "description": "Embedded Fluxnova webapps for process monitoring, task management, and administration",
+      "interfaces": [
+        {
+          "unique-id": "cockpit-ui",
+          "type": "api",
+          "path": "/fluxnova/app/"
+        }
+      ],
+      "controls": {
+        "human-feedback-loop": {
+          "description": "FINOS AIGF mi-11: loan officer completes UserTask_LoanOfficerReview with loanOfficerDecision and structured feedback.",
+          "aigf-mitigations": [
+            "mi-11"
+          ],
+          "aigf-risks": [
+            "ri-1",
+            "ri-6"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-11-human-feedback-loop",
+              "config": {
+                "control-id": "mi-11",
+                "name": "Human Feedback Loop for AI Systems",
+                "description": "Capture human loan-officer decisions and agree/disagree feedback on MANUAL_REVIEW paths via UserTask_LoanOfficerReview (FINOS AIGF mi-11).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-11_human-feedback-loop-for-ai-systems.html",
+                "bpmn-activity-id": "UserTask_LoanOfficerReview",
+                "decision-variable": "loanOfficerDecision",
+                "form-ref": "credit_approval_review",
+                "scope": "loan-officer-review"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "fluxnova-external-task-client",
+      "node-type": "service",
+      "name": "External Task Client",
+      "description": "In-process Fluxnova external-task client (custom FlexibleDateExternalTaskClientBuilder) that long-polls /engine-rest and dispatches topic workers with basic auth",
+      "metadata": {
+        "base-url": "http://localhost:8080/engine-rest",
+        "bean": "externalTaskClient"
+      }
+    },
+    {
+      "unique-id": "agentic-ad-hoc-plugin",
+      "node-type": "service",
+      "name": "Agentic Ad-Hoc Subprocess Plugin",
+      "description": "fluxnova-engine-plugins-ai-agentic-subprocess runtime: agent config extraction, tool catalogue, context specs, termination handling, conversation trace export, and Spring AI LLM integration",
+      "metadata": {
+        "artifact": "fluxnova-engine-plugins-ai-agentic-subprocess",
+        "source": "https://github.com/finos/fluxnova-plugins"
+      }
+    },
+    {
+      "unique-id": "agent-provider-registry",
+      "node-type": "service",
+      "name": "Agent Provider Registry",
+      "description": "Resolves BPMN agent:config provider identifiers to Spring AI ChatModel implementations (AgentProviderRegistry)",
+      "metadata": {
+        "class": "org.finos.fluxnova.bpm.engine.ai.agent.llm.provider.AgentProviderRegistry",
+        "registered-providers": [
+          "openai"
+        ]
+      }
+    },
+    {
+      "unique-id": "spring-ai-llm-service",
+      "node-type": "service",
+      "name": "Spring AI LLM Service",
+      "description": "Primary LlmService bridge (SpringAiLlmService wrapped by LoanApprovalLlmService) that invokes the selected provider/model, records token metrics, and enforces credit-risk tool ordering",
+      "metadata": {
+        "beans": [
+          "springAiLlmService",
+          "loanApprovalLlmService"
+        ],
+        "starter": "spring-ai-starter-model-openai"
+      }
+    },
+    {
+      "unique-id": "credit-risk-agent",
+      "node-type": "service",
+      "name": "Credit Risk Agent (AgentTask_CreditRisk)",
+      "description": "Fluxnova agentic ad-hoc subprocess that plans tool calls for credit score, employment verification, and credit-risk evaluation. Provider and model come from BPMN agent:config; system prompt is enriched by LoanApprovalAgentConfigRegistry",
+      "data-classification": "Sensitive",
+      "metadata": {
+        "bpmn-element-id": "AgentTask_CreditRisk",
+        "provider-source": "BPMN agent:config \u2192 AgentProviderRegistry",
+        "expected-provider": "openai",
+        "expected-model": "from BPMN (demo/tests commonly gpt-5.4 or gpt-4o)",
+        "tools": [
+          "ServiceTask_CreditScoreCheck",
+          "ServiceTask_VerifyEmployment",
+          "ServiceTask_EvaluateCreditScore"
+        ],
+        "guards": [
+          "CreditRiskAwareTerminationHandler",
+          "AgentAdHocCompletionGuardProcessEnginePlugin",
+          "AgentToolExecutionSerializationAspect"
+        ],
+        "trace-variables": [
+          "agentLastResponse",
+          "agentConversationTrace",
+          "agentConversationHistory"
+        ]
+      },
+      "controls": {
+        "ai-data-leakage-prevention": {
+          "description": "FINOS AIGF mi-1: credit-risk agent must not receive identity media or unnecessary PII; only allowlisted underwriting context may leave to the hosted model.",
+          "aigf-mitigations": [
+            "mi-1"
+          ],
+          "aigf-risks": [
+            "ri-1"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-1-ai-data-leakage-prevention",
+              "config": {
+                "control-id": "mi-1",
+                "name": "AI Data Leakage Prevention and Detection",
+                "description": "Prevent and detect unauthorized egress of PII and sensitive financial data to hosted LLM providers (FINOS AIGF mi-1).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-1_ai-data-leakage-prevention-and-detection.html",
+                "data-minimization": true,
+                "context-allowlist": [
+                  "creditScore",
+                  "creditRiskBand",
+                  "aiRiskScore",
+                  "employmentVerified",
+                  "annualIncome",
+                  "approvalDecision",
+                  "requestedAmount",
+                  "loanPurpose"
+                ],
+                "forbidden-egress-categories": [
+                  "attachedFile",
+                  "identity-document-image",
+                  "idNumber",
+                  "raw-address"
+                ],
+                "sanitize-conversation-traces": true,
+                "egress-audit": true
+              }
+            }
+          ]
+        },
+        "ai-system-observability": {
+          "description": "FINOS AIGF mi-4: credit-risk agent LLM calls emit tokens, latency, errors, and sanitized audit.",
+          "aigf-mitigations": [
+            "mi-4"
+          ],
+          "aigf-risks": [
+            "ri-1"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-4-ai-system-observability",
+              "config": {
+                "control-id": "mi-4",
+                "name": "AI System Observability",
+                "description": "Observe AI system behaviour with tokens, latency, errors, model version, and sanitized audit (FINOS AIGF mi-4).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-4_ai-system-observability.html",
+                "track-tokens": true,
+                "track-latency": true,
+                "track-errors": true,
+                "track-model-version": true,
+                "sanitized-audit-log": true,
+                "persist-call-metadata": true,
+                "forbid-logging-raw-prompts": true,
+                "metrics": [
+                  "fluxnova.llm.tokens",
+                  "fluxnova.llm.calls",
+                  "fluxnova.llm.duration",
+                  "fluxnova.llm.errors",
+                  "fluxnova.dlp.mi1.egress"
+                ],
+                "dashboard-ids": [
+                  "fluxnova-task-execution",
+                  "fluxnova-ai-observability"
+                ],
+                "scope": "llm-caller"
+              }
+            }
+          ]
+        },
+        "system-acceptance-testing": {
+          "description": "FINOS AIGF mi-5: credit-risk band and approval decision criteria are acceptance-tested.",
+          "aigf-mitigations": [
+            "mi-5"
+          ],
+          "aigf-risks": [
+            "ri-4",
+            "ri-6",
+            "ri-14"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-5-system-acceptance-testing",
+              "config": {
+                "control-id": "mi-5",
+                "name": "System Acceptance Testing",
+                "description": "Validate loan-approval AI paths against acceptance criteria with a pass-rate threshold that tolerates LLM output variability (FINOS AIGF mi-5).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-5_system-acceptance-testing.html",
+                "pass-rate-threshold": 0.9,
+                "tolerate-output-variability": true,
+                "criteria-categories": [
+                  "credit-risk-bands",
+                  "approval-decision",
+                  "mi-1-dlp",
+                  "loan-application-bounds",
+                  "document-validity"
+                ],
+                "scope": "decision-policy"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "document-intelligence-service",
+      "node-type": "service",
+      "name": "Document Intelligence Service",
+      "description": "Spring AI structured extraction of identity data from attached ID images; invoked by the document-intelligence external-task worker (not the agentic plugin path)",
+      "data-classification": "PII",
+      "metadata": {
+        "class": "DocumentIntelligenceService",
+        "provider": "openai",
+        "model": "gpt-5.4",
+        "config-keys": [
+          "fluxnova.document-intelligence.provider",
+          "fluxnova.document-intelligence.model"
+        ],
+        "topic": "document-intelligence"
+      },
+      "controls": {
+        "ai-data-leakage-prevention": {
+          "description": "FINOS AIGF mi-1: only path authorized to send identity-document media to a hosted model; minimize payload and audit egress.",
+          "aigf-mitigations": [
+            "mi-1"
+          ],
+          "aigf-risks": [
+            "ri-1"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-1-ai-data-leakage-prevention",
+              "config": {
+                "control-id": "mi-1",
+                "name": "AI Data Leakage Prevention and Detection",
+                "description": "Prevent and detect unauthorized egress of PII and sensitive financial data to hosted LLM providers (FINOS AIGF mi-1).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-1_ai-data-leakage-prevention-and-detection.html",
+                "data-minimization": true,
+                "allowed-egress-categories": [
+                  "document-image-for-extraction"
+                ],
+                "purpose": "structured-identity-field-extraction",
+                "forbid-logging-raw-media": true,
+                "tls-required": true,
+                "egress-audit": true
+              }
+            }
+          ]
+        },
+        "ai-system-observability": {
+          "description": "FINOS AIGF mi-4: document-intelligence LLM calls emit tokens, latency, errors, and sanitized audit.",
+          "aigf-mitigations": [
+            "mi-4"
+          ],
+          "aigf-risks": [
+            "ri-1"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-4-ai-system-observability",
+              "config": {
+                "control-id": "mi-4",
+                "name": "AI System Observability",
+                "description": "Observe AI system behaviour with tokens, latency, errors, model version, and sanitized audit (FINOS AIGF mi-4).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-4_ai-system-observability.html",
+                "track-tokens": true,
+                "track-latency": true,
+                "track-errors": true,
+                "track-model-version": true,
+                "sanitized-audit-log": true,
+                "persist-call-metadata": true,
+                "forbid-logging-raw-prompts": true,
+                "metrics": [
+                  "fluxnova.llm.tokens",
+                  "fluxnova.llm.calls",
+                  "fluxnova.llm.duration",
+                  "fluxnova.llm.errors",
+                  "fluxnova.dlp.mi1.egress"
+                ],
+                "dashboard-ids": [
+                  "fluxnova-task-execution",
+                  "fluxnova-ai-observability"
+                ],
+                "scope": "llm-caller"
+              }
+            }
+          ]
+        },
+        "system-acceptance-testing": {
+          "description": "FINOS AIGF mi-5: document extraction validity rules are acceptance-tested.",
+          "aigf-mitigations": [
+            "mi-5"
+          ],
+          "aigf-risks": [
+            "ri-4",
+            "ri-6",
+            "ri-14"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-5-system-acceptance-testing",
+              "config": {
+                "control-id": "mi-5",
+                "name": "System Acceptance Testing",
+                "description": "Validate loan-approval AI paths against acceptance criteria with a pass-rate threshold that tolerates LLM output variability (FINOS AIGF mi-5).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-5_system-acceptance-testing.html",
+                "pass-rate-threshold": 0.9,
+                "tolerate-output-variability": true,
+                "criteria-categories": [
+                  "credit-risk-bands",
+                  "approval-decision",
+                  "mi-1-dlp",
+                  "loan-application-bounds",
+                  "document-validity"
+                ],
+                "scope": "document-validity"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "external-task-workers",
+      "node-type": "system",
+      "name": "External Task Workers",
+      "description": "Topic workers subscribed via the in-process external-task client. Most are deterministic stubs; document-intelligence calls OpenAI; credit-* tools also serve the credit-risk agent catalogue"
+    },
+    {
+      "unique-id": "worker-document-intelligence",
+      "node-type": "service",
+      "name": "Document Intelligence Worker",
+      "description": "External task topic document-intelligence \u2192 DocumentIntelligenceService (OpenAI gpt-5.4)",
+      "metadata": {
+        "topic": "document-intelligence",
+        "llm": true
+      }
+    },
+    {
+      "unique-id": "worker-fraud-detection",
+      "node-type": "service",
+      "name": "Fraud Detection Worker",
+      "description": "Stub fraud scoring (fraudRiskScore / isFraudulent)",
+      "metadata": {
+        "topic": "fraud-detection",
+        "llm": false,
+        "stub": true
+      }
+    },
+    {
+      "unique-id": "worker-compliance-check",
+      "node-type": "service",
+      "name": "Compliance Check Worker",
+      "description": "Compliance review external task (current implementation is an incomplete stub)",
+      "metadata": {
+        "topic": "compliance-check",
+        "llm": false,
+        "stub": true
+      }
+    },
+    {
+      "unique-id": "worker-check-credit-score",
+      "node-type": "service",
+      "name": "Check Credit Score Worker",
+      "description": "Agent tool / external task producing creditScore, creditRiskBand, aiRiskScore",
+      "metadata": {
+        "topic": "check-credit-score",
+        "bpmn-tool-id": "ServiceTask_CreditScoreCheck",
+        "llm": false,
+        "stub": true
+      }
+    },
+    {
+      "unique-id": "worker-verify-employment",
+      "node-type": "service",
+      "name": "Verify Employment Worker",
+      "description": "Agent tool / external task producing employmentVerified and annualIncome",
+      "metadata": {
+        "topic": "verify-employment",
+        "bpmn-tool-id": "ServiceTask_VerifyEmployment",
+        "llm": false,
+        "stub": true
+      }
+    },
+    {
+      "unique-id": "worker-evaluate-credit-risk",
+      "node-type": "service",
+      "name": "Evaluate Credit Risk Worker",
+      "description": "Deterministic policy gate writing approvalDecision (MANUAL_REVIEW / REJECT)",
+      "metadata": {
+        "topic": "evaluate-credit-risk",
+        "bpmn-tool-id": "ServiceTask_EvaluateCreditScore",
+        "llm": false
+      }
+    },
+    {
+      "unique-id": "worker-adjust-interest-rate",
+      "node-type": "service",
+      "name": "Adjust Interest Rate Worker",
+      "description": "Dynamic pricing stub completing adjust-interest-rate",
+      "metadata": {
+        "topic": "adjust-interest-rate",
+        "stub": true
+      }
+    },
+    {
+      "unique-id": "worker-generate-loan-agreement",
+      "node-type": "service",
+      "name": "Generate Loan Agreement Worker",
+      "description": "Agreement generation stub",
+      "metadata": {
+        "topic": "generate-loan-agreement",
+        "stub": true
+      }
+    },
+    {
+      "unique-id": "worker-send-for-e-signature",
+      "node-type": "service",
+      "name": "Send for E-Signature Worker",
+      "description": "E-signature stub",
+      "metadata": {
+        "topic": "send-for-e-signature",
+        "stub": true
+      }
+    },
+    {
+      "unique-id": "worker-disburse-fund",
+      "node-type": "service",
+      "name": "Disburse Fund Worker",
+      "description": "Disbursement stub",
+      "metadata": {
+        "topic": "disburse-fund",
+        "stub": true
+      }
+    },
+    {
+      "unique-id": "h2-process-database",
+      "node-type": "database",
+      "name": "H2 Process Engine Database",
+      "description": "In-memory H2 store used by Fluxnova for process instances, history, jobs, and variables (resets on restart)",
+      "data-classification": "Sensitive",
+      "interfaces": [
+        {
+          "unique-id": "h2-jdbc",
+          "type": "jdbc-interface"
+        }
+      ]
+    },
+    {
+      "unique-id": "openai-platform",
+      "node-type": "system",
+      "name": "OpenAI Platform",
+      "description": "Hosted LLM provider used by Spring AI for document intelligence and agentic credit-risk turns",
+      "metadata": {
+        "auth": "OPENAI_API_KEY",
+        "spring-config": "spring.ai.openai.*"
+      },
+      "controls": {
+        "ai-data-leakage-prevention": {
+          "description": "FINOS AIGF mi-1: third-party hosted model boundary \u2014 contractual no-training / retention controls, TLS, and tenant isolation expectations.",
+          "aigf-mitigations": [
+            "mi-1"
+          ],
+          "aigf-risks": [
+            "ri-1"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-1-ai-data-leakage-prevention",
+              "config": {
+                "control-id": "mi-1",
+                "name": "AI Data Leakage Prevention and Detection",
+                "description": "Prevent and detect unauthorized egress of PII and sensitive financial data to hosted LLM providers (FINOS AIGF mi-1).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-1_ai-data-leakage-prevention-and-detection.html",
+                "tsp-no-training": true,
+                "tsp-zero-or-minimal-persistence": true,
+                "tls-required": true,
+                "prefer-private-endpoint": true,
+                "egress-allowlist-hosts": [
+                  "api.openai.com"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "openai-chat-api",
+      "node-type": "service",
+      "name": "OpenAI Chat Completions API",
+      "description": "Hosted chat completions endpoint reached via spring-ai-starter-model-openai",
+      "interfaces": [
+        {
+          "unique-id": "openai-https-api",
+          "type": "api",
+          "host": "api.openai.com"
+        }
+      ],
+      "controls": {
+        "ai-data-leakage-prevention": {
+          "description": "FINOS AIGF mi-1: all chat completions to this API are sensitive session data crossing the organizational boundary.",
+          "aigf-mitigations": [
+            "mi-1"
+          ],
+          "aigf-risks": [
+            "ri-1"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-1-ai-data-leakage-prevention",
+              "config": {
+                "control-id": "mi-1",
+                "name": "AI Data Leakage Prevention and Detection",
+                "description": "Prevent and detect unauthorized egress of PII and sensitive financial data to hosted LLM providers (FINOS AIGF mi-1).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-1_ai-data-leakage-prevention-and-detection.html",
+                "tls-required": true,
+                "session-data-classification": [
+                  "PII",
+                  "Sensitive"
+                ],
+                "egress-audit": true,
+                "forbid-unapproved-callers": true
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "model-gpt-5-4",
+      "node-type": "service",
+      "name": "Model gpt-5.4",
+      "description": "OpenAI model used for document intelligence (configured). Also a typical model choice for AgentTask_CreditRisk when set in BPMN agent:config",
+      "metadata": {
+        "provider": "openai",
+        "model-id": "gpt-5.4",
+        "used-by": [
+          "document-intelligence-service",
+          "credit-risk-agent"
+        ],
+        "temperature": 1
+      }
+    },
+    {
+      "unique-id": "observability-stack",
+      "node-type": "system",
+      "name": "Observability Stack",
+      "description": "Local Docker Compose stack for traces and metrics (observability/)",
+      "controls": {
+        "ai-system-observability": {
+          "description": "FINOS AIGF mi-4: local metrics/traces stack supporting AI system observability.",
+          "aigf-mitigations": [
+            "mi-4"
+          ],
+          "aigf-risks": [
+            "ri-1"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-4-ai-system-observability",
+              "config": {
+                "control-id": "mi-4",
+                "name": "AI System Observability",
+                "description": "Observe AI system behaviour with tokens, latency, errors, model version, and sanitized audit (FINOS AIGF mi-4).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-4_ai-system-observability.html",
+                "track-tokens": true,
+                "track-latency": true,
+                "track-errors": true,
+                "track-model-version": true,
+                "sanitized-audit-log": true,
+                "persist-call-metadata": true,
+                "forbid-logging-raw-prompts": true,
+                "metrics": [
+                  "fluxnova.llm.tokens",
+                  "fluxnova.llm.calls",
+                  "fluxnova.llm.duration",
+                  "fluxnova.llm.errors",
+                  "fluxnova.dlp.mi1.egress"
+                ],
+                "dashboard-ids": [
+                  "fluxnova-task-execution",
+                  "fluxnova-ai-observability"
+                ],
+                "scope": "observability-stack"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "prometheus",
+      "node-type": "service",
+      "name": "Prometheus",
+      "description": "Scrapes Fluxnova/Spring Actuator Prometheus endpoint for task, LLM token, and business metrics",
+      "interfaces": [
+        {
+          "unique-id": "prometheus-http",
+          "type": "host-port-interface",
+          "host": "localhost",
+          "port": 9090
+        }
+      ]
+    },
+    {
+      "unique-id": "grafana",
+      "node-type": "service",
+      "name": "Grafana",
+      "description": "Dashboards for Fluxnova task execution, AI system observability (mi-4), and loan-approval business outcomes",
+      "interfaces": [
+        {
+          "unique-id": "grafana-http",
+          "type": "host-port-interface",
+          "host": "localhost",
+          "port": 3000
+        }
+      ],
+      "controls": {
+        "ai-system-observability": {
+          "description": "FINOS AIGF mi-4: Grafana dashboards for AI system and task observability.",
+          "aigf-mitigations": [
+            "mi-4"
+          ],
+          "aigf-risks": [
+            "ri-1"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-4-ai-system-observability",
+              "config": {
+                "control-id": "mi-4",
+                "name": "AI System Observability",
+                "description": "Observe AI system behaviour with tokens, latency, errors, model version, and sanitized audit (FINOS AIGF mi-4).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-4_ai-system-observability.html",
+                "track-tokens": true,
+                "track-latency": true,
+                "track-errors": true,
+                "track-model-version": true,
+                "sanitized-audit-log": true,
+                "persist-call-metadata": true,
+                "forbid-logging-raw-prompts": true,
+                "metrics": [
+                  "fluxnova.llm.tokens",
+                  "fluxnova.llm.calls",
+                  "fluxnova.llm.duration",
+                  "fluxnova.llm.errors",
+                  "fluxnova.dlp.mi1.egress"
+                ],
+                "dashboard-ids": [
+                  "fluxnova-task-execution",
+                  "fluxnova-ai-observability"
+                ],
+                "scope": "dashboard"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "tempo",
+      "node-type": "service",
+      "name": "Grafana Tempo",
+      "description": "OTLP trace backend for process-engine and external-task spans",
+      "interfaces": [
+        {
+          "unique-id": "tempo-otlp-http",
+          "type": "host-port-interface",
+          "host": "127.0.0.1",
+          "port": 4318
+        }
+      ]
+    },
+    {
+      "unique-id": "actuator-prometheus",
+      "node-type": "service",
+      "name": "Spring Actuator Prometheus Endpoint",
+      "description": "Exposes /actuator/prometheus including fluxnova.llm.tokens/calls/duration/errors, fluxnova.task.*, fluxnova.dlp.mi1.egress, and loan business metrics",
+      "interfaces": [
+        {
+          "unique-id": "actuator-prometheus-api",
+          "type": "api",
+          "path": "/actuator/prometheus"
+        }
+      ],
+      "controls": {
+        "ai-system-observability": {
+          "description": "FINOS AIGF mi-4: Prometheus export includes LLM and DLP observability metrics.",
+          "aigf-mitigations": [
+            "mi-4"
+          ],
+          "aigf-risks": [
+            "ri-1"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-4-ai-system-observability",
+              "config": {
+                "control-id": "mi-4",
+                "name": "AI System Observability",
+                "description": "Observe AI system behaviour with tokens, latency, errors, model version, and sanitized audit (FINOS AIGF mi-4).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-4_ai-system-observability.html",
+                "track-tokens": true,
+                "track-latency": true,
+                "track-errors": true,
+                "track-model-version": true,
+                "sanitized-audit-log": true,
+                "persist-call-metadata": true,
+                "forbid-logging-raw-prompts": true,
+                "metrics": [
+                  "fluxnova.llm.tokens",
+                  "fluxnova.llm.calls",
+                  "fluxnova.llm.duration",
+                  "fluxnova.llm.errors",
+                  "fluxnova.dlp.mi1.egress"
+                ],
+                "dashboard-ids": [
+                  "fluxnova-task-execution",
+                  "fluxnova-ai-observability"
+                ],
+                "scope": "metrics-export"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "loan-application-data",
+      "node-type": "data-asset",
+      "name": "Loan Application & Identity Data",
+      "description": "Applicant PII, attached identity documents, financial variables, AI risk scores, and decision rationale processed through the workflow",
+      "data-classification": "PII"
+    },
+    {
+      "unique-id": "finos-ai-governance-catalog",
+      "node-type": "system",
+      "name": "FINOS AI Governance Framework Catalog",
+      "description": "External catalog of risks, mitigations, and use cases referenced by the launch UI governance panel",
+      "interfaces": [
+        {
+          "unique-id": "air-governance-site",
+          "type": "api",
+          "host": "air-governance-framework.finos.org"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "unique-id": "ecosystem-composition",
+      "description": "Demo ecosystem groups application, UI, LLM provider, observability, and governance catalog",
+      "relationship-type": {
+        "composed-of": {
+          "container": "loan-approval-ecosystem",
+          "nodes": [
+            "launch-ui",
+            "fluxnova-spring-boot-app",
+            "openai-platform",
+            "observability-stack",
+            "finos-ai-governance-catalog",
+            "loan-application-data"
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "app-composition",
+      "description": "Spring Boot application hosts Fluxnova runtime, demo API, agents, workers, and local DB",
+      "relationship-type": {
+        "composed-of": {
+          "container": "fluxnova-spring-boot-app",
+          "nodes": [
+            "loan-approval-demo-api",
+            "fluxnova-process-engine",
+            "fluxnova-job-executor",
+            "fluxnova-engine-rest",
+            "fluxnova-cockpit",
+            "fluxnova-external-task-client",
+            "agentic-ad-hoc-plugin",
+            "agent-provider-registry",
+            "spring-ai-llm-service",
+            "credit-risk-agent",
+            "document-intelligence-service",
+            "external-task-workers",
+            "h2-process-database",
+            "actuator-prometheus"
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "workers-composition",
+      "description": "External-task worker system contains all topic handlers",
+      "relationship-type": {
+        "composed-of": {
+          "container": "external-task-workers",
+          "nodes": [
+            "worker-document-intelligence",
+            "worker-fraud-detection",
+            "worker-compliance-check",
+            "worker-check-credit-score",
+            "worker-verify-employment",
+            "worker-evaluate-credit-risk",
+            "worker-adjust-interest-rate",
+            "worker-generate-loan-agreement",
+            "worker-send-for-e-signature",
+            "worker-disburse-fund"
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "openai-composition",
+      "description": "OpenAI platform exposes chat API and gpt-5.4 model",
+      "relationship-type": {
+        "composed-of": {
+          "container": "openai-platform",
+          "nodes": [
+            "openai-chat-api",
+            "model-gpt-5-4"
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "observability-composition",
+      "description": "Observability stack consists of Prometheus, Grafana, and Tempo",
+      "relationship-type": {
+        "composed-of": {
+          "container": "observability-stack",
+          "nodes": [
+            "prometheus",
+            "grafana",
+            "tempo"
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "applicant-interacts-ui",
+      "description": "Applicant participates via the demo launch experience (sample identity documents)",
+      "relationship-type": {
+        "interacts": {
+          "actor": "loan-applicant",
+          "nodes": [
+            "launch-ui"
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "officer-interacts-ui",
+      "description": "Loan officer starts instances and monitors status in the launch UI",
+      "relationship-type": {
+        "interacts": {
+          "actor": "loan-officer",
+          "nodes": [
+            "launch-ui",
+            "fluxnova-cockpit"
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "compliance-interacts-cockpit",
+      "description": "Compliance officer reviews cases via Cockpit / Tasklist",
+      "relationship-type": {
+        "interacts": {
+          "actor": "compliance-officer",
+          "nodes": [
+            "fluxnova-cockpit"
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "ui-to-demo-api",
+      "description": "Launch UI calls demo REST API (Vite proxy /api \u2192 :8080)",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "launch-ui"
+          },
+          "destination": {
+            "node": "loan-approval-demo-api",
+            "interfaces": [
+              "demo-rest-api"
+            ]
+          }
+        }
+      },
+      "protocol": "HTTP"
+    },
+    {
+      "unique-id": "demo-api-to-engine",
+      "description": "Demo service starts process instances and reads runtime/history via the process engine",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "loan-approval-demo-api"
+          },
+          "destination": {
+            "node": "fluxnova-process-engine"
+          }
+        }
+      },
+      "protocol": "TCP"
+    },
+    {
+      "unique-id": "cockpit-to-engine-rest",
+      "description": "Cockpit uses Engine REST to inspect process instances",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "fluxnova-cockpit"
+          },
+          "destination": {
+            "node": "fluxnova-engine-rest",
+            "interfaces": [
+              "engine-rest-api"
+            ]
+          }
+        }
+      },
+      "protocol": "HTTP"
+    },
+    {
+      "unique-id": "etc-to-engine-rest",
+      "description": "External-task client long-polls Engine REST for locked tasks",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "fluxnova-external-task-client"
+          },
+          "destination": {
+            "node": "fluxnova-engine-rest",
+            "interfaces": [
+              "engine-rest-api"
+            ]
+          }
+        }
+      },
+      "protocol": "HTTP"
+    },
+    {
+      "unique-id": "engine-to-job-executor",
+      "description": "Process engine schedules asynchronous work including agent turns",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "fluxnova-process-engine"
+          },
+          "destination": {
+            "node": "fluxnova-job-executor"
+          }
+        }
+      },
+      "protocol": "TCP"
+    },
+    {
+      "unique-id": "engine-to-h2",
+      "description": "Process engine persists instances, jobs, and variables in H2",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "fluxnova-process-engine"
+          },
+          "destination": {
+            "node": "h2-process-database",
+            "interfaces": [
+              "h2-jdbc"
+            ]
+          }
+        }
+      },
+      "protocol": "JDBC"
+    },
+    {
+      "unique-id": "job-executor-to-agent",
+      "description": "Job executor drives AgentTask_CreditRisk orchestration cycles",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "fluxnova-job-executor"
+          },
+          "destination": {
+            "node": "credit-risk-agent"
+          }
+        }
+      },
+      "protocol": "TCP"
+    },
+    {
+      "unique-id": "agent-uses-plugin",
+      "description": "Credit-risk agent executes through the agentic ad-hoc subprocess plugin",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "credit-risk-agent"
+          },
+          "destination": {
+            "node": "agentic-ad-hoc-plugin"
+          }
+        }
+      },
+      "protocol": "TCP"
+    },
+    {
+      "unique-id": "plugin-to-llm-service",
+      "description": "Plugin invokes Spring AI LLM service for each agent turn",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "agentic-ad-hoc-plugin"
+          },
+          "destination": {
+            "node": "spring-ai-llm-service"
+          }
+        }
+      },
+      "protocol": "TCP"
+    },
+    {
+      "unique-id": "llm-service-to-provider-registry",
+      "description": "LLM service resolves provider from AgentProviderRegistry",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "spring-ai-llm-service"
+          },
+          "destination": {
+            "node": "agent-provider-registry"
+          }
+        }
+      },
+      "protocol": "TCP"
+    },
+    {
+      "unique-id": "provider-registry-to-openai",
+      "description": "Registered openai provider routes chat requests to OpenAI Chat API",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "agent-provider-registry"
+          },
+          "destination": {
+            "node": "openai-chat-api",
+            "interfaces": [
+              "openai-https-api"
+            ]
+          }
+        }
+      },
+      "protocol": "HTTPS",
+      "controls": {
+        "ai-data-leakage-prevention": {
+          "description": "FINOS AIGF mi-1: agent LLM egress edge \u2014 only allowlisted underwriting context; block identity media and raw PII.",
+          "aigf-mitigations": [
+            "mi-1"
+          ],
+          "aigf-risks": [
+            "ri-1"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-1-ai-data-leakage-prevention",
+              "config": {
+                "control-id": "mi-1",
+                "name": "AI Data Leakage Prevention and Detection",
+                "description": "Prevent and detect unauthorized egress of PII and sensitive financial data to hosted LLM providers (FINOS AIGF mi-1).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-1_ai-data-leakage-prevention-and-detection.html",
+                "edge-type": "agent-llm-egress",
+                "allowed-egress-categories": [
+                  "credit-risk-scores",
+                  "underwriting-context"
+                ],
+                "forbidden-egress-categories": [
+                  "identity-document-image",
+                  "attachedFile",
+                  "idNumber"
+                ],
+                "tls-required": true,
+                "egress-audit": true
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "openai-api-to-model",
+      "description": "Chat API serves model gpt-5.4 (and other models selected in agent:config)",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "openai-chat-api"
+          },
+          "destination": {
+            "node": "model-gpt-5-4"
+          }
+        }
+      },
+      "protocol": "HTTPS"
+    },
+    {
+      "unique-id": "doc-intel-to-openai",
+      "description": "Document intelligence calls OpenAI gpt-5.4 via Spring AI ChatModel",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "document-intelligence-service"
+          },
+          "destination": {
+            "node": "openai-chat-api",
+            "interfaces": [
+              "openai-https-api"
+            ]
+          }
+        }
+      },
+      "protocol": "HTTPS",
+      "controls": {
+        "ai-data-leakage-prevention": {
+          "description": "FINOS AIGF mi-1: sole authorized edge for identity-document image egress to a hosted model.",
+          "aigf-mitigations": [
+            "mi-1"
+          ],
+          "aigf-risks": [
+            "ri-1"
+          ],
+          "requirements": [
+            {
+              "requirement-url": "https://ai-steel-thread.local/control-requirement/mi-1-ai-data-leakage-prevention",
+              "config": {
+                "control-id": "mi-1",
+                "name": "AI Data Leakage Prevention and Detection",
+                "description": "Prevent and detect unauthorized egress of PII and sensitive financial data to hosted LLM providers (FINOS AIGF mi-1).",
+                "aigf-catalog-url": "https://air-governance-framework.finos.org/mitigations/mi-1_ai-data-leakage-prevention-and-detection.html",
+                "edge-type": "document-intelligence-egress",
+                "allowed-egress-categories": [
+                  "document-image-for-extraction"
+                ],
+                "purpose": "structured-identity-field-extraction",
+                "tls-required": true,
+                "forbid-logging-raw-media": true,
+                "egress-audit": true
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "unique-id": "doc-worker-to-doc-service",
+      "description": "Document-intelligence worker delegates extraction to DocumentIntelligenceService",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "worker-document-intelligence"
+          },
+          "destination": {
+            "node": "document-intelligence-service"
+          }
+        }
+      },
+      "protocol": "TCP"
+    },
+    {
+      "unique-id": "etc-dispatches-workers",
+      "description": "External-task client dispatches locked topics to workers",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "fluxnova-external-task-client"
+          },
+          "destination": {
+            "node": "external-task-workers"
+          }
+        }
+      },
+      "protocol": "TCP"
+    },
+    {
+      "unique-id": "agent-invokes-credit-tools",
+      "description": "Credit-risk agent invokes credit score, employment, and evaluate tools (external tasks / delegates)",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "credit-risk-agent"
+          },
+          "destination": {
+            "node": "external-task-workers"
+          }
+        }
+      },
+      "protocol": "TCP"
+    },
+    {
+      "unique-id": "app-exports-otlp-traces",
+      "description": "Application exports OpenTelemetry traces to Tempo OTLP HTTP",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "fluxnova-spring-boot-app"
+          },
+          "destination": {
+            "node": "tempo",
+            "interfaces": [
+              "tempo-otlp-http"
+            ]
+          }
+        }
+      },
+      "protocol": "HTTP"
+    },
+    {
+      "unique-id": "prometheus-scrapes-actuator",
+      "description": "Prometheus scrapes Actuator Prometheus metrics",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "prometheus"
+          },
+          "destination": {
+            "node": "actuator-prometheus",
+            "interfaces": [
+              "actuator-prometheus-api"
+            ]
+          }
+        }
+      },
+      "protocol": "HTTP"
+    },
+    {
+      "unique-id": "grafana-to-prometheus",
+      "description": "Grafana queries Prometheus for dashboards",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "grafana"
+          },
+          "destination": {
+            "node": "prometheus",
+            "interfaces": [
+              "prometheus-http"
+            ]
+          }
+        }
+      },
+      "protocol": "HTTP"
+    },
+    {
+      "unique-id": "grafana-to-tempo",
+      "description": "Grafana queries Tempo for traces",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "grafana"
+          },
+          "destination": {
+            "node": "tempo"
+          }
+        }
+      },
+      "protocol": "HTTP"
+    },
+    {
+      "unique-id": "ui-references-governance-catalog",
+      "description": "Launch UI governance panel deep-links to FINOS AI Governance Framework risks and mitigations",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "launch-ui"
+          },
+          "destination": {
+            "node": "finos-ai-governance-catalog",
+            "interfaces": [
+              "air-governance-site"
+            ]
+          }
+        }
+      },
+      "protocol": "HTTPS"
+    },
+    {
+      "unique-id": "workflow-handles-application-data",
+      "description": "Process engine and agents process loan application PII and financial data",
+      "relationship-type": {
+        "connects": {
+          "source": {
+            "node": "fluxnova-process-engine"
+          },
+          "destination": {
+            "node": "loan-application-data"
+          }
+        }
+      },
+      "protocol": "TCP"
+    }
+  ],
+  "flows": [
+    {
+      "unique-id": "flow-start-loan-approval",
+      "name": "Start Loan Approval Instance",
+      "description": "Loan officer launches a LoanApprovalProcess_AI instance with amount, purpose, and sample identity document",
+      "transitions": [
+        {
+          "relationship-unique-id": "officer-interacts-ui",
+          "sequence-number": 1,
+          "description": "Officer opens Launch UI and submits the loan form"
+        },
+        {
+          "relationship-unique-id": "ui-to-demo-api",
+          "sequence-number": 2,
+          "description": "UI POSTs /api/demo/loan-approval/start"
+        },
+        {
+          "relationship-unique-id": "demo-api-to-engine",
+          "sequence-number": 3,
+          "description": "Demo service starts process definition LoanApprovalProcess_AI with attachedFile and form variables"
+        },
+        {
+          "relationship-unique-id": "engine-to-h2",
+          "sequence-number": 4,
+          "description": "Engine persists the new process instance"
+        }
+      ]
+    },
+    {
+      "unique-id": "flow-document-intelligence",
+      "name": "Document Intelligence Extraction",
+      "description": "External-task worker extracts identity fields from the attached document via OpenAI gpt-5.4",
+      "transitions": [
+        {
+          "relationship-unique-id": "etc-to-engine-rest",
+          "sequence-number": 1,
+          "description": "External-task client fetches document-intelligence topic"
+        },
+        {
+          "relationship-unique-id": "etc-dispatches-workers",
+          "sequence-number": 2,
+          "description": "Client dispatches ExtractDataFromDocumentWorker"
+        },
+        {
+          "relationship-unique-id": "doc-worker-to-doc-service",
+          "sequence-number": 3,
+          "description": "Worker calls DocumentIntelligenceService"
+        },
+        {
+          "relationship-unique-id": "doc-intel-to-openai",
+          "sequence-number": 4,
+          "description": "Spring AI sends structured chat request to OpenAI"
+        },
+        {
+          "relationship-unique-id": "openai-api-to-model",
+          "sequence-number": 5,
+          "description": "OpenAI serves model gpt-5.4 and returns extraction + token usage"
+        }
+      ]
+    },
+    {
+      "unique-id": "flow-credit-risk-agent",
+      "name": "Credit Risk Agent Tool Loop",
+      "description": "Agentic ad-hoc subprocess AgentTask_CreditRisk plans and invokes credit tools via OpenAI, with deterministic policy gates",
+      "transitions": [
+        {
+          "relationship-unique-id": "engine-to-job-executor",
+          "sequence-number": 1,
+          "description": "Engine schedules an agent job for AgentTask_CreditRisk"
+        },
+        {
+          "relationship-unique-id": "job-executor-to-agent",
+          "sequence-number": 2,
+          "description": "Job executor enters the credit-risk agent scope"
+        },
+        {
+          "relationship-unique-id": "agent-uses-plugin",
+          "sequence-number": 3,
+          "description": "Agentic plugin loads agent:config, tools, and context"
+        },
+        {
+          "relationship-unique-id": "plugin-to-llm-service",
+          "sequence-number": 4,
+          "description": "Plugin requests an LLM turn"
+        },
+        {
+          "relationship-unique-id": "llm-service-to-provider-registry",
+          "sequence-number": 5,
+          "description": "Provider registry selects the openai ChatModel"
+        },
+        {
+          "relationship-unique-id": "provider-registry-to-openai",
+          "sequence-number": 6,
+          "description": "Spring AI calls OpenAI Chat Completions"
+        },
+        {
+          "relationship-unique-id": "openai-api-to-model",
+          "sequence-number": 7,
+          "description": "Configured BPMN model (typically gpt-5.4) returns tool calls / final answer"
+        },
+        {
+          "relationship-unique-id": "agent-invokes-credit-tools",
+          "sequence-number": 8,
+          "description": "Agent dispatches check-credit-score, verify-employment, and/or evaluate-credit-risk tools"
+        }
+      ]
+    },
+    {
+      "unique-id": "flow-observe-run",
+      "name": "Observe Process Run",
+      "description": "Operators inspect instance status in the UI and deeper traces/metrics in Grafana",
+      "transitions": [
+        {
+          "relationship-unique-id": "ui-to-demo-api",
+          "sequence-number": 1,
+          "description": "UI polls /instances/{id}/status for activity log and LLM tokens"
+        },
+        {
+          "relationship-unique-id": "app-exports-otlp-traces",
+          "sequence-number": 2,
+          "description": "Runtime exports spans to Tempo"
+        },
+        {
+          "relationship-unique-id": "prometheus-scrapes-actuator",
+          "sequence-number": 3,
+          "description": "Prometheus scrapes LLM and task metrics"
+        },
+        {
+          "relationship-unique-id": "grafana-to-prometheus",
+          "sequence-number": 4,
+          "description": "Grafana renders Fluxnova dashboards"
+        }
+      ]
+    }
+  ]
+}

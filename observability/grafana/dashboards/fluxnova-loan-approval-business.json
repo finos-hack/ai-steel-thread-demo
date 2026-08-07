@@ -512,7 +512,7 @@
   },
   "time": { "from": "now-15m", "to": "now" },
   "timezone": "browser",
-  "title": "Fluxnova Loan Approval Business",
+  "title": "Loan Approval Business",
   "uid": "fluxnova-loan-approval-business",
   "version": 1
 }

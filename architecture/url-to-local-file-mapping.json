@@ -1,0 +1,6 @@
+{
+  "https://ai-steel-thread.local/control-requirement/mi-1-ai-data-leakage-prevention": "controls/mi-1-ai-data-leakage-prevention.requirement.json",
+  "https://ai-steel-thread.local/control-requirement/mi-4-ai-system-observability": "controls/mi-4-ai-system-observability.requirement.json",
+  "https://ai-steel-thread.local/control-requirement/mi-5-system-acceptance-testing": "controls/mi-5-system-acceptance-testing.requirement.json",
+  "https://ai-steel-thread.local/control-requirement/mi-11-human-feedback-loop": "controls/mi-11-human-feedback-loop.requirement.json"
+}

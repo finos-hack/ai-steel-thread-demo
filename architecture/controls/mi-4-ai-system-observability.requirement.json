@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-steel-thread.local/control-requirement/mi-4-ai-system-observability",
+  "title": "AI System Observability (FINOS AIGF mi-4)",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "https://calm.finos.org/release/1.2/meta/control-requirement.json"
+    }
+  ],
+  "properties": {
+    "control-id": {
+      "const": "mi-4"
+    },
+    "name": {
+      "const": "AI System Observability"
+    },
+    "description": {
+      "type": "string"
+    },
+    "aigf-catalog-url": {
+      "type": "string",
+      "description": "Link to the FINOS AI Governance Framework mitigation page"
+    },
+    "track-tokens": {
+      "type": "boolean",
+      "description": "Emit prompt/completion token counters per workflow, task, model, and provider"
+    },
+    "track-latency": {
+      "type": "boolean",
+      "description": "Emit LLM call duration timers"
+    },
+    "track-errors": {
+      "type": "boolean",
+      "description": "Emit LLM error counters with error_type labels"
+    },
+    "track-model-version": {
+      "type": "boolean",
+      "description": "Label metrics and audit with configured model / version pin"
+    },
+    "sanitized-audit-log": {
+      "type": "boolean",
+      "description": "Log structured LLM audit without raw prompts, responses, or media"
+    },
+    "persist-call-metadata": {
+      "type": "boolean",
+      "description": "Persist sanitized last-call metadata on the process instance for status APIs"
+    },
+    "forbid-logging-raw-prompts": {
+      "type": "boolean",
+      "description": "Never write full prompt or completion text into application or observability logs"
+    },
+    "metrics": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Micrometer / Prometheus metric names implementing this control"
+    },
+    "dashboard-ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Grafana dashboard UIDs used for operator visibility"
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["llm-caller", "metrics-export", "dashboard", "observability-stack"],
+      "description": "Class of architectural node this control instance applies to"
+    }
+  },
+  "required": ["control-id", "name", "description"]
+}

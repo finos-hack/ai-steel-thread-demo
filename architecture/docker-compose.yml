@@ -1,0 +1,30 @@
+# CALM Hub for the loan-approval steel thread (port 8090 — Fluxnova stays on 8080).
+#
+#   docker compose -f architecture/docker-compose.yml up
+#
+# Then push architecture/loan-approval.calm.json (see architecture/README.md).
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: calm_mongodb_steel_thread
+    ports:
+      - "27018:27017"
+    networks:
+      - calm-net
+
+  calmhub:
+    image: finos/calm-hub:latest
+    container_name: calm-hub-steel-thread
+    ports:
+      - "8090:8080"
+    environment:
+      - JAVA_OPTS=-Dquarkus.mongodb.connection-string=mongodb://mongodb:27017 -Dquarkus.profile=no-auth
+    depends_on:
+      - mongodb
+    networks:
+      - calm-net
+
+networks:
+  calm-net:
+    driver: bridge

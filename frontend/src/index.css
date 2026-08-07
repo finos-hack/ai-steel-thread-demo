@@ -1,0 +1,60 @@
+:root {
+  --ink: #10141c;
+  --ink-soft: #2a3344;
+  --paper: #e8edf4;
+  --paper-dim: #c5cedc;
+  --steel: #5b6b82;
+  --copper: #c46b3a;
+  --copper-deep: #9a4d28;
+  --success: #2f6b4f;
+  --danger: #a33b3b;
+  --glow: rgba(196, 107, 58, 0.28);
+
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'Instrument Sans', sans-serif;
+
+  font-family: var(--font-body);
+  line-height: 1.45;
+  font-weight: 400;
+  color: var(--paper);
+  background: var(--ink);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  min-width: 320px;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 700px at 12% -10%, rgba(91, 107, 130, 0.35), transparent 55%),
+    radial-gradient(900px 600px at 95% 10%, var(--glow), transparent 50%),
+    linear-gradient(160deg, #0c1018 0%, #151b27 45%, #0f1420 100%);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+}

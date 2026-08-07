@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:agent="http://fluxnova.finos.org/schema/1.0/ai/agent" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_123" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.2.0-dev" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="2.0.0">
+  <bpmn:process id="LoanApprovalProcess_AI" name="Loan Approval Process" isExecutable="true" camunda:historyTimeToLive="40">
+    <bpmn:startEvent id="StartEvent_1" name="Loan Application Submitted">
+      <bpmn:outgoing>SequenceFlow_1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1y6wy99</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="ServiceTask_DocumentIntelligence" name="AI: Extract Data from Documents" camunda:type="external" camunda:topic="document-intelligence">
+      <bpmn:incoming>SequenceFlow_1</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_1" name="Automated Validation" default="SequenceFlow_3">
+      <bpmn:incoming>SequenceFlow_2</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_4</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="ServiceTask_FraudDetection" name="AI: Fraud Detection" camunda:type="external" camunda:topic="fraud-detection">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="Input_33ee9ip" />
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_2" name="Fraud Detected?" default="Flow_1qimgqg">
+      <bpmn:incoming>SequenceFlow_5</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_6</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1qimgqg</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:subProcess id="SubProcess_ComplianceReview" name="Compliance Review">
+      <bpmn:incoming>SequenceFlow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_1vkf6s8</bpmn:outgoing>
+      <bpmn:startEvent id="StartEvent_2" name="Start Compliance Review">
+        <bpmn:outgoing>SequenceFlow_9</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:serviceTask id="ServiceTask_ComplianceCheck" name="AI: Compliance Check" camunda:type="external" camunda:topic="compliance-check">
+        <bpmn:incoming>SequenceFlow_9</bpmn:incoming>
+        <bpmn:outgoing>SequenceFlow_10</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:userTask id="UserTask_ComplianceReview" name="Human: Compliance Officer Review">
+        <bpmn:incoming>SequenceFlow_10</bpmn:incoming>
+        <bpmn:outgoing>SequenceFlow_11</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="Gateway_3" name="Compliance Cleared?" default="SequenceFlow_13">
+        <bpmn:incoming>SequenceFlow_11</bpmn:incoming>
+        <bpmn:outgoing>SequenceFlow_12</bpmn:outgoing>
+        <bpmn:outgoing>SequenceFlow_13</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="EndEvent_3" name="Compliance Cleared">
+        <bpmn:incoming>SequenceFlow_12</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:endEvent id="EndEvent_4" name="Compliance Rejected">
+        <bpmn:incoming>SequenceFlow_13</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="SequenceFlow_9" sourceRef="StartEvent_2" targetRef="ServiceTask_ComplianceCheck" />
+      <bpmn:sequenceFlow id="SequenceFlow_10" sourceRef="ServiceTask_ComplianceCheck" targetRef="UserTask_ComplianceReview" />
+      <bpmn:sequenceFlow id="SequenceFlow_11" sourceRef="UserTask_ComplianceReview" targetRef="Gateway_3" />
+      <bpmn:sequenceFlow id="SequenceFlow_12" sourceRef="Gateway_3" targetRef="EndEvent_3">
+        <bpmn:conditionExpression>${complianceStatus eq 'CLEARED'}</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="SequenceFlow_13" sourceRef="Gateway_3" targetRef="EndEvent_4" />
+    </bpmn:subProcess>
+    <bpmn:exclusiveGateway id="Gateway_4" name="Risk Approved?" default="SequenceFlow_18">
+      <bpmn:incoming>Flow_0gphuwv</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_17</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="ServiceTask_DynamicPricing" name="AI: Adjust Interest Rate" camunda:type="external" camunda:topic="adjust-interest-rate">
+      <bpmn:incoming>SequenceFlow_17</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_19</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_5" name="Manual Review Required?" default="SequenceFlow_21">
+      <bpmn:incoming>SequenceFlow_19</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_20</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_21</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="UserTask_LoanOfficerReview" name="Human: Loan Officer Review" camunda:formRef="credit_approval_review" camunda:formRefBinding="latest">
+      <bpmn:incoming>SequenceFlow_20</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_22</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_6" name="Approved?" default="SequenceFlow_24">
+      <bpmn:incoming>SequenceFlow_22</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_23</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_24</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="ServiceTask_GenerateAgreement" name="Generate Loan Agreement" camunda:type="external" camunda:topic="generate-loan-agreement">
+      <bpmn:incoming>SequenceFlow_23</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_21</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_25</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="ServiceTask_SendForESignature" name="Send for E-Signature" camunda:type="external" camunda:topic="send-for-e-signature">
+      <bpmn:incoming>SequenceFlow_25</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_26</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="ServiceTask_DisburseFunds" name="Disburse Funds" camunda:type="external" camunda:topic="disburse-fund">
+      <bpmn:incoming>SequenceFlow_26</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_27</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_1" name="Loan Approved">
+      <bpmn:incoming>SequenceFlow_27</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="EndEvent_Loan_Rejected" name="Loan Rejected">
+      <bpmn:incoming>SequenceFlow_4</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_18</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_24</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1" sourceRef="StartEvent_1" targetRef="ServiceTask_DocumentIntelligence" />
+    <bpmn:sequenceFlow id="SequenceFlow_2" sourceRef="ServiceTask_DocumentIntelligence" targetRef="Gateway_1" />
+    <bpmn:sequenceFlow id="SequenceFlow_4" name="Invalid" sourceRef="Gateway_1" targetRef="EndEvent_Loan_Rejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isInvalid eq true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_5" sourceRef="ServiceTask_FraudDetection" targetRef="Gateway_2" />
+    <bpmn:sequenceFlow id="SequenceFlow_6" name="Yes" sourceRef="Gateway_2" targetRef="SubProcess_ComplianceReview">
+      <bpmn:conditionExpression>${isFraudulent eq true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_17" name="Yes" sourceRef="Gateway_4" targetRef="ServiceTask_DynamicPricing">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${aiRiskScore &lt;= 1}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_18" name="No" sourceRef="Gateway_4" targetRef="EndEvent_Loan_Rejected" />
+    <bpmn:sequenceFlow id="SequenceFlow_19" sourceRef="ServiceTask_DynamicPricing" targetRef="Gateway_5" />
+    <bpmn:sequenceFlow id="SequenceFlow_20" name="Yes" sourceRef="Gateway_5" targetRef="UserTask_LoanOfficerReview">
+      <bpmn:conditionExpression>${approvalDecision eq 'MANUAL_REVIEW'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_21" name="No" sourceRef="Gateway_5" targetRef="ServiceTask_GenerateAgreement" />
+    <bpmn:sequenceFlow id="SequenceFlow_22" sourceRef="UserTask_LoanOfficerReview" targetRef="Gateway_6" />
+    <bpmn:sequenceFlow id="SequenceFlow_23" name="Yes" sourceRef="Gateway_6" targetRef="ServiceTask_GenerateAgreement">
+      <bpmn:conditionExpression>${loanOfficerDecision eq 'APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_24" name="No" sourceRef="Gateway_6" targetRef="EndEvent_Loan_Rejected" />
+    <bpmn:sequenceFlow id="SequenceFlow_25" sourceRef="ServiceTask_GenerateAgreement" targetRef="ServiceTask_SendForESignature" />
+    <bpmn:sequenceFlow id="SequenceFlow_26" sourceRef="ServiceTask_SendForESignature" targetRef="ServiceTask_DisburseFunds" />
+    <bpmn:sequenceFlow id="SequenceFlow_27" sourceRef="ServiceTask_DisburseFunds" targetRef="EndEvent_1" />
+    <bpmn:sequenceFlow id="SequenceFlow_3" name="Valid" sourceRef="Gateway_1" targetRef="ServiceTask_FraudDetection" />
+    <bpmn:task id="Activity_1q0ttb5" name="Store Documents">
+      <bpmn:incoming>Flow_1y6wy99</bpmn:incoming>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow_1y6wy99" sourceRef="StartEvent_1" targetRef="Activity_1q0ttb5" />
+    <bpmn:adHocSubProcess id="AgentTask_CreditRisk" name="AI: Credit Risk Agent">
+      <bpmn:extensionElements>
+        <agent:config provider="${creditRiskAgentProvider}" model="${creditRiskAgentModel}" cacheStrategy="${creditRiskAgentCacheStrategy}" promptCacheKey="${creditRiskAgentPromptCacheKey}" systemPrompt="You are a senior loan assessment analyst. Your goal is to gather enough evidence to make a well-reasoned, defensible lending decision for each applicant by using the tools at your disposal." />
+        <agent:context>
+          <agent:variable name="requestedAmount" />
+          <agent:variable name="loanPurpose" />
+          <agent:variable name="creditScore" />
+          <agent:variable name="annualIncome" />
+          <agent:variable name="aiRiskScore" />
+          <agent:variable name="employmentVerified" />
+        </agent:context>
+        <camunda:inputOutput>
+          <camunda:outputParameter name="Output_3o127f8" />
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1qimgqg</bpmn:incoming>
+      <bpmn:outgoing>Flow_1qj012q</bpmn:outgoing>
+      <bpmn:serviceTask id="ServiceTask_VerifyEmployment" name="Verify Employment" camunda:delegateExpression="${verifyEmploymentDelegate}">
+        <bpmn:documentation>This service verifies the employment of an applicant</bpmn:documentation>
+      </bpmn:serviceTask>
+      <bpmn:serviceTask id="ServiceTask_CreditScoreCheck" name="Credit Score Check" camunda:delegateExpression="${checkCreditScoreDelegate}">
+        <bpmn:documentation>This service checks the credit score of an applicant</bpmn:documentation>
+      </bpmn:serviceTask>
+    </bpmn:adHocSubProcess>
+    <bpmn:sequenceFlow id="Flow_1qimgqg" sourceRef="Gateway_2" targetRef="AgentTask_CreditRisk" />
+    <bpmn:sequenceFlow id="Flow_1qj012q" sourceRef="AgentTask_CreditRisk" targetRef="ServiceTask_EvaluateCreditScore" />
+    <bpmn:endEvent id="Event_Loan_Rejected_By_Compliance" name="Loan Rejected by Compliance">
+      <bpmn:incoming>Flow_1vkf6s8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1vkf6s8" sourceRef="SubProcess_ComplianceReview" targetRef="Event_Loan_Rejected_By_Compliance" />
+    <bpmn:serviceTask id="ServiceTask_EvaluateCreditScore" name="Evaluate Credit Score and AI Risk" camunda:type="external" camunda:topic="evaluate-credit-risk">
+      <bpmn:documentation>This service evaluates the credit score and ai risk to give a final decision</bpmn:documentation>
+      <bpmn:incoming>Flow_1qj012q</bpmn:incoming>
+      <bpmn:outgoing>Flow_0gphuwv</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0gphuwv" sourceRef="ServiceTask_EvaluateCreditScore" targetRef="Gateway_4" />
+    <bpmn:textAnnotation id="TextAnnotation_0o2m9rc">
+      <bpmn:text>Credit risk assessment agent</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_07relqk" associationDirection="None" sourceRef="AgentTask_CreditRisk" targetRef="TextAnnotation_0o2m9rc" />
+    <bpmn:textAnnotation id="TextAnnotation_1y46zec">
+      <bpmn:text>Connect to the fraud detection agent</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_14d4mn6" associationDirection="None" sourceRef="ServiceTask_FraudDetection" targetRef="TextAnnotation_1y46zec" />
+    <bpmn:textAnnotation id="TextAnnotation_0o9oac2">
+      <bpmn:text>Connect to the document processing agent</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1qib9ly" associationDirection="None" sourceRef="ServiceTask_DocumentIntelligence" targetRef="TextAnnotation_0o9oac2" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="LoanApprovalProcess_AI">
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="180" y="330" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="158" y="366" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_DocumentIntelligence_di" bpmnElement="ServiceTask_DocumentIntelligence" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <dc:Bounds x="280" y="310" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1_di" bpmnElement="Gateway_1" isMarkerVisible="true">
+        <dc:Bounds x="435" y="323" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="433" y="286" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_FraudDetection_di" bpmnElement="ServiceTask_FraudDetection" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <dc:Bounds x="580" y="303" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_2_di" bpmnElement="Gateway_2" isMarkerVisible="true">
+        <dc:Bounds x="760" y="323" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="744" y="299" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1jvtnvk_di" bpmnElement="Event_Loan_Rejected_By_Compliance">
+        <dc:Bounds x="1682" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1658" y="225" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_2_di" bpmnElement="EndEvent_Loan_Rejected">
+        <dc:Bounds x="1122" y="652" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1104" y="698" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0cfc2fw_di" bpmnElement="ServiceTask_EvaluateCreditScore">
+        <dc:Bounds x="950" y="450" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_DynamicPricing_di" bpmnElement="ServiceTask_DynamicPricing" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <dc:Bounds x="1280" y="445" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SubProcess_ComplianceReview_di" bpmnElement="SubProcess_ComplianceReview" isExpanded="true">
+        <dc:Bounds x="890" y="80" width="660" height="260" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_2_di" bpmnElement="StartEvent_2">
+        <dc:Bounds x="910" y="150" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="897" y="201" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_ComplianceCheck_di" bpmnElement="ServiceTask_ComplianceCheck" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <dc:Bounds x="1010" y="130" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_ComplianceReview_di" bpmnElement="UserTask_ComplianceReview">
+        <dc:Bounds x="1190" y="130" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_3_di" bpmnElement="Gateway_3" isMarkerVisible="true">
+        <dc:Bounds x="1355" y="145" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1351" y="116" width="59" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_3_di" bpmnElement="EndEvent_3">
+        <dc:Bounds x="1452" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1441" y="188" width="59" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_4_di" bpmnElement="EndEvent_4">
+        <dc:Bounds x="1362" y="252" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1351" y="289" width="59" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_9_di" bpmnElement="SequenceFlow_9">
+        <di:waypoint x="946" y="168" />
+        <di:waypoint x="1010" y="168" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_10_di" bpmnElement="SequenceFlow_10">
+        <di:waypoint x="1130" y="170" />
+        <di:waypoint x="1190" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_11_di" bpmnElement="SequenceFlow_11">
+        <di:waypoint x="1310" y="170" />
+        <di:waypoint x="1355" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_12_di" bpmnElement="SequenceFlow_12">
+        <di:waypoint x="1405" y="170" />
+        <di:waypoint x="1452" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_13_di" bpmnElement="SequenceFlow_13">
+        <di:waypoint x="1380" y="195" />
+        <di:waypoint x="1380" y="252" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Gateway_4_di" bpmnElement="Gateway_4" isMarkerVisible="true">
+        <dc:Bounds x="1115" y="460" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1101" y="443" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_5_di" bpmnElement="Gateway_5" isMarkerVisible="true">
+        <dc:Bounds x="1460" y="460" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1447" y="423" width="76" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_LoanOfficerReview_di" bpmnElement="UserTask_LoanOfficerReview">
+        <dc:Bounds x="1570" y="520" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_6_di" bpmnElement="Gateway_6" isMarkerVisible="true">
+        <dc:Bounds x="1755" y="535" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1753" y="517" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_GenerateAgreement_di" bpmnElement="ServiceTask_GenerateAgreement">
+        <dc:Bounds x="1830" y="445" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_SendForESignature_di" bpmnElement="ServiceTask_SendForESignature">
+        <dc:Bounds x="2020" y="445" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_DisburseFunds_di" bpmnElement="ServiceTask_DisburseFunds">
+        <dc:Bounds x="2200" y="445" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1">
+        <dc:Bounds x="2382" y="467" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2363" y="503" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1q0ttb5_di" bpmnElement="Activity_1q0ttb5" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="290" y="420" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_03xhopi_di" bpmnElement="AgentTask_CreditRisk" isExpanded="true" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <dc:Bounds x="555" y="440" width="325" height="160" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_CreditScoreCheck_di" bpmnElement="ServiceTask_CreditScoreCheck">
+        <dc:Bounds x="575" y="490" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0to63f8_di" bpmnElement="ServiceTask_VerifyEmployment">
+        <dc:Bounds x="750" y="490" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Association_07relqk_di" bpmnElement="Association_07relqk">
+        <di:waypoint x="850" y="440" />
+        <di:waypoint x="890" y="416" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="TextAnnotation_1y46zec_di" bpmnElement="TextAnnotation_1y46zec">
+        <dc:Bounds x="630" y="213" width="130" height="47" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0o9oac2_di" bpmnElement="TextAnnotation_0o9oac2">
+        <dc:Bounds x="340" y="213" width="120" height="55" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1_di" bpmnElement="SequenceFlow_1">
+        <di:waypoint x="216" y="348" />
+        <di:waypoint x="280" y="348" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_2_di" bpmnElement="SequenceFlow_2">
+        <di:waypoint x="400" y="348" />
+        <di:waypoint x="435" y="348" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_4_di" bpmnElement="SequenceFlow_4">
+        <di:waypoint x="460" y="373" />
+        <di:waypoint x="460" y="670" />
+        <di:waypoint x="1122" y="670" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="589" y="682" width="32" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_5_di" bpmnElement="SequenceFlow_5">
+        <di:waypoint x="700" y="348" />
+        <di:waypoint x="760" y="348" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_6_di" bpmnElement="SequenceFlow_6">
+        <di:waypoint x="810" y="348" />
+        <di:waypoint x="850" y="348" />
+        <di:waypoint x="850" y="210" />
+        <di:waypoint x="890" y="210" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="824" y="326" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_17_di" bpmnElement="SequenceFlow_17">
+        <di:waypoint x="1165" y="485" />
+        <di:waypoint x="1280" y="485" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1202" y="473" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_18_di" bpmnElement="SequenceFlow_18">
+        <di:waypoint x="1140" y="510" />
+        <di:waypoint x="1140" y="652" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1141" y="550" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_19_di" bpmnElement="SequenceFlow_19">
+        <di:waypoint x="1400" y="485" />
+        <di:waypoint x="1460" y="485" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_20_di" bpmnElement="SequenceFlow_20">
+        <di:waypoint x="1485" y="510" />
+        <di:waypoint x="1485" y="560" />
+        <di:waypoint x="1570" y="560" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1513" y="546" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_21_di" bpmnElement="SequenceFlow_21">
+        <di:waypoint x="1510" y="485" />
+        <di:waypoint x="1830" y="485" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1632" y="470" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_22_di" bpmnElement="SequenceFlow_22">
+        <di:waypoint x="1690" y="560" />
+        <di:waypoint x="1755" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_23_di" bpmnElement="SequenceFlow_23">
+        <di:waypoint x="1805" y="560" />
+        <di:waypoint x="1890" y="560" />
+        <di:waypoint x="1890" y="525" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1832" y="544" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_24_di" bpmnElement="SequenceFlow_24">
+        <di:waypoint x="1780" y="585" />
+        <di:waypoint x="1780" y="670" />
+        <di:waypoint x="1158" y="670" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1682" y="657" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_25_di" bpmnElement="SequenceFlow_25">
+        <di:waypoint x="1950" y="485" />
+        <di:waypoint x="2020" y="485" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_26_di" bpmnElement="SequenceFlow_26">
+        <di:waypoint x="2140" y="485" />
+        <di:waypoint x="2200" y="485" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_27_di" bpmnElement="SequenceFlow_27">
+        <di:waypoint x="2320" y="485" />
+        <di:waypoint x="2382" y="485" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_3_di" bpmnElement="SequenceFlow_3">
+        <di:waypoint x="484" y="347" />
+        <di:waypoint x="580" y="347" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="490" y="334" width="24" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1y6wy99_di" bpmnElement="Flow_1y6wy99">
+        <di:waypoint x="216" y="348" />
+        <di:waypoint x="250" y="348" />
+        <di:waypoint x="250" y="460" />
+        <di:waypoint x="290" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1qimgqg_di" bpmnElement="Flow_1qimgqg">
+        <di:waypoint x="785" y="373" />
+        <di:waypoint x="785" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1qj012q_di" bpmnElement="Flow_1qj012q">
+        <di:waypoint x="880" y="490" />
+        <di:waypoint x="950" y="490" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_14d4mn6_di" bpmnElement="Association_14d4mn6">
+        <di:waypoint x="654" y="303" />
+        <di:waypoint x="669" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_1qib9ly_di" bpmnElement="Association_1qib9ly">
+        <di:waypoint x="356" y="310" />
+        <di:waypoint x="374" y="268" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1vkf6s8_di" bpmnElement="Flow_1vkf6s8">
+        <di:waypoint x="1550" y="200" />
+        <di:waypoint x="1682" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0gphuwv_di" bpmnElement="Flow_0gphuwv">
+        <di:waypoint x="1050" y="488" />
+        <di:waypoint x="1116" y="486" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="TextAnnotation_0o2m9rc_di" bpmnElement="TextAnnotation_0o2m9rc">
+        <dc:Bounds x="890" y="370" width="100" height="55" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
