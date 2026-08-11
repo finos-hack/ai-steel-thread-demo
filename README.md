@@ -13,7 +13,7 @@ Standalone Fluxnova Spring Boot demo for AI agentic ad-hoc subprocesses (loan ap
 
 ## Docker (full stack)
 
-Builds the app against `fluxnova-plugins` branch `llm-token-usage` (override with `PLUGINS_REF`), then runs API + Launch UI + Prometheus/Grafana/Tempo.
+Builds the app against `fluxnova-plugins` branch `llm-token-usage` (override with `PLUGINS_REF`), then runs API + Launch UI + Prometheus/Grafana/Tempo + CALM Hub.
 
 ```bash
 cp .env.example .env
@@ -28,6 +28,7 @@ docker compose up --build
 | API / Cockpit | http://localhost:8080 |
 | Grafana | http://localhost:3000 |
 | Prometheus | http://localhost:9090 |
+| CALM Hub | http://localhost:8090 |
 
 First build is slow (clones plugins + Maven download). Rebuild app only after code changes:
 

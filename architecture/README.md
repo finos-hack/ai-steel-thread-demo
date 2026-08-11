@@ -2,13 +2,24 @@
 
 Runs [FINOS CALM Hub](https://calm.finos.org/calm-hub/) on **port 8090** so it does not collide with the Fluxnova demo on 8080.
 
+With the full demo stack, Hub starts automatically and `loan-approval.calm.json` is seeded:
+
+```bash
+docker compose up   # from repo root — includes calmhub + calmhub-seed
+```
+
+Standalone (Hub only):
+
 ```bash
 docker compose -f architecture/docker-compose.yml up
 ```
 
-UI: http://localhost:8090
+UI: http://localhost:8090  
+Deep link: http://localhost:8090/#/finos/architectures/loan-approval/1.0.0
 
-## Publish this architecture
+## Publish this architecture (standalone Hub)
+
+If you started Hub via `architecture/docker-compose.yml` only (no root seed job):
 
 ```bash
 # once Hub is up
@@ -18,10 +29,6 @@ npx @finos/calm-cli hub push architecture architecture/loan-approval.calm.json \
   --name "AI Steel Thread — Loan Approval" \
   -f pretty
 ```
-
-Then open:
-
-http://localhost:8090/#/finos/architectures/loan-approval/1.0.0
 
 Or from the Launch UI use-case card: **View CALM architecture** (in-app canvas) / **Open CALM Hub**.
 

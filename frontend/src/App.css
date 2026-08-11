@@ -1716,6 +1716,12 @@
   box-shadow: inset 0 0 0 1px rgba(232, 237, 244, 0.28);
 }
 
+.btn.ghost.is-disabled,
+.btn.ghost[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .btn.ghost:hover:not(:disabled),
 .btn.ghost:focus-visible:not(:disabled) {
   box-shadow: inset 0 0 0 1px var(--copper);

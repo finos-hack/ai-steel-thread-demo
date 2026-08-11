@@ -13,6 +13,7 @@ import org.finos.fluxnova.bpm.engine.ai.agent.llm.service.SpringAiLlmService;
 import org.finos.fluxnova.bpm.engine.ai.agent.model.AgentConfig;
 import org.finos.fluxnova.bpm.engine.shared.model.ConversationEntry;
 import org.finos.fluxnova.bpm.engine.shared.model.LlmResponse;
+import org.finos.fluxnova.bpm.engine.shared.model.Role;
 import org.finos.fluxnova.bpm.engine.shared.model.ToolCallRequest;
 import org.finos.ai.demo.dlp.Mi1DataLeakagePrevention;
 import org.finos.ai.demo.observability.LlmTokenUsageMetrics;
@@ -84,14 +85,37 @@ public class LoanApprovalLlmService implements LlmService {
               && LoanApprovalAgentConfiguration.CREDIT_RISK_AGENT_ID.equals(catalogue.elementId())
               && response.toolCalls().size() > 1) {
             List<ToolCallRequest> reordered = prioritizeCreditScore(response.toolCalls());
+            List<ConversationEntry> history =
+                syncAssistantToolCallOrder(response.updatedHistory(), reordered);
             return new LlmResponse(
                 response.assistantText(),
                 reordered,
-                response.updatedHistory(),
+                history,
                 response.tokenUsage());
           }
           return response;
         });
+  }
+
+  /**
+   * Keep the last assistant history entry's tool_calls aligned with the dispatch order. Anthropic
+   * validates tool_result IDs against the previous assistant tool_use list; reordering only the
+   * dispatch list while leaving history unchanged is fine for IDs, but keeping both in sync avoids
+   * confusing traces and provider edge cases.
+   */
+  private static List<ConversationEntry> syncAssistantToolCallOrder(
+      List<ConversationEntry> history, List<ToolCallRequest> reordered) {
+    if (history == null || history.isEmpty()) {
+      return history;
+    }
+    List<ConversationEntry> copy = new ArrayList<>(history);
+    int last = copy.size() - 1;
+    ConversationEntry entry = copy.get(last);
+    if (entry.role() != Role.ASSISTANT) {
+      return history;
+    }
+    copy.set(last, ConversationEntry.assistant(entry.content(), reordered));
+    return copy;
   }
 
   private ResolvedContext applyMi1(AgentToolCatalogue catalogue, ResolvedContext context) {

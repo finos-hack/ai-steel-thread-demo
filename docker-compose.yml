@@ -6,6 +6,7 @@
 # UI:        http://localhost:5173
 # API/Cockpit: http://localhost:8080
 # Grafana:   http://localhost:3000
+# CALM Hub:  http://localhost:8090
 
 name: ai-steel-thread-demo
 
@@ -76,3 +77,33 @@ services:
     depends_on:
       - prometheus
       - tempo
+
+  # FINOS CALM Hub (official visualizer for loan-approval.calm.json)
+  calm-mongodb:
+    image: mongo:7
+    ports:
+      - "27018:27017"
+
+  calmhub:
+    image: finos/calm-hub:latest
+    ports:
+      - "8090:8080"
+    environment:
+      JAVA_OPTS: >-
+        -Dquarkus.mongodb.connection-string=mongodb://calm-mongodb:27017
+        -Dquarkus.profile=no-auth
+        -Dcalm.hub.base-url=http://localhost:8090
+    depends_on:
+      - calm-mongodb
+
+  # One-shot init job (expected status: Exited 0 after seeding — not a long-running service).
+  calmhub-seed:
+    image: curlimages/curl:8.12.1
+    depends_on:
+      calmhub:
+        condition: service_started
+    volumes:
+      - ./architecture/loan-approval.calm.json:/data/loan-approval.calm.json:ro
+      - ./docker/calmhub-seed.sh:/seed.sh:ro
+    entrypoint: ["/bin/sh", "/seed.sh"]
+    restart: "no"

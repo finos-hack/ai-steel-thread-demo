@@ -10,6 +10,11 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
+      '/calm-hub-status': {
+        target: 'http://localhost:8090/q/openapi',
+        changeOrigin: true,
+        rewrite: () => '/q/openapi',
+      },
     },
   },
 })

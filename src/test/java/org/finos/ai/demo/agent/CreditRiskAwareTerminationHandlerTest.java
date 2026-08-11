@@ -119,9 +119,32 @@ class CreditRiskAwareTerminationHandlerTest {
     when(toolInvocationService.invoke(any(), any(), any(), any()))
         .thenReturn(
             org.finos.fluxnova.bpm.engine.shared.model.ToolInvocationResult.success("tc-1"));
+    when(stateManager.loadHistory(runtimeService, SCOPE_ID))
+        .thenReturn(List.of(ConversationEntry.assistant("Skipping credit score.", List.of())));
 
     handler.complete(runtimeService, SCOPE_ID);
 
+    verify(stateManager)
+        .saveHistory(
+            eq(runtimeService),
+            eq(SCOPE_ID),
+            org.mockito.ArgumentMatchers.argThat(
+                history ->
+                    history.size() == 2
+                        && history.get(1).toolCalls() != null
+                        && history.get(1).toolCalls().size() == 1
+                        && history
+                            .get(1)
+                            .toolCalls()
+                            .get(0)
+                            .toolId()
+                            .equals(LoanApprovalAgentConfigRegistry.CREDIT_SCORE_TOOL_ID)
+                        && history
+                            .get(1)
+                            .toolCalls()
+                            .get(0)
+                            .toolCallId()
+                            .startsWith("required-credit-score-")));
     verify(toolInvocationService).invoke(any(), eq(SCOPE_ID), eq(catalogue), any());
     verify(runtimeService, never()).completeAdHocSubProcess(anyString());
     verify(runtimeService, never()).completeAdHocSubProcess(anyString(), anyMap());

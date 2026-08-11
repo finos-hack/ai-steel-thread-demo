@@ -3,6 +3,7 @@
   "$id": "http://localhost:8090/calm/namespaces/finos/architectures/loan-approval/versions/1.0.0",
   "unique-id": "ai-steel-thread-loan-approval",
   "name": "AI Steel Thread \u2014 Loan Approval",
+  "title": "AI Steel Thread \u2014 Loan Approval",
   "description": "CALM architecture for the FINOS Fluxnova AI Steel Thread demo implementing the FINOS AI Governance Framework UC-3 Loan Approval use case. Captures the Spring Boot host, Fluxnova engine surfaces, agentic ad-hoc subprocess runtime, external-task workers, Spring AI / OpenAI provider and models, launch UI, and local observability stack.",
   "metadata": [
     {

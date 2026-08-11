@@ -130,20 +130,14 @@ export function CalmArchitectureVisualizer({
 
   useEffect(() => {
     let cancelled = false
-    const hubOrigin = new URL(calmHubHref).origin
-    fetch(hubOrigin, { mode: 'no-cors' })
-      .then(() => {
-        if (!cancelled) setHubAvailable(true)
-      })
-      .catch(() => {
-        if (!cancelled) setHubAvailable(false)
-      })
-    fetch(`${hubOrigin}/q/health`, { mode: 'cors' })
+    // Same-origin probe via nginx (/calm-hub-status) or Vite proxy — direct
+    // fetch to :8090 fails CORS from the Launch UI origin and falsely disables the button.
+    fetch('/calm-hub-status', { method: 'GET' })
       .then((r) => {
         if (!cancelled) setHubAvailable(r.ok)
       })
       .catch(() => {
-        /* keep no-cors result */
+        if (!cancelled) setHubAvailable(false)
       })
     return () => {
       cancelled = true
@@ -175,8 +169,8 @@ export function CalmArchitectureVisualizer({
               rel="noreferrer"
               title={
                 hubAvailable === false
-                  ? 'Start architecture/docker-compose.yml first'
-                  : 'Open in local CALM Hub'
+                  ? 'Hub probe failed — link still opens localhost:8090 if calmhub is running'
+                  : 'Open architecture in local CALM Hub'
               }
             >
               Open CALM Hub
@@ -275,9 +269,10 @@ export function CalmArchitectureVisualizer({
               )}
               {hubAvailable === false && (
                 <p className="hint" style={{ marginTop: '1rem' }}>
-                  Local CALM Hub is not reachable. Start it with{' '}
+                  Local CALM Hub is not reachable on port 8090. With the full stack it starts
+                  automatically (`calmhub` in <code>docker compose up</code>). Standalone:{' '}
                   <code>docker compose -f architecture/docker-compose.yml up</code>, then push the
-                  architecture (see architecture/README.md) to open the official Hub visualizer.
+                  architecture (see architecture/README.md).
                 </p>
               )}
             </aside>

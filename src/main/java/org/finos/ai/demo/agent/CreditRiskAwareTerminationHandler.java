@@ -1,5 +1,6 @@
 package org.finos.ai.demo.agent;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +16,7 @@ import org.finos.fluxnova.bpm.engine.ai.agent.orchestrator.trace.AgentTraceExpor
 import org.finos.fluxnova.bpm.engine.ai.agent.service.ToolInvocationService;
 import org.finos.fluxnova.bpm.engine.runtime.Execution;
 import org.finos.fluxnova.bpm.engine.runtime.ProcessInstance;
+import org.finos.fluxnova.bpm.engine.shared.model.ConversationEntry;
 import org.finos.fluxnova.bpm.engine.shared.model.ToolCallRequest;
 import org.finos.fluxnova.bpm.engine.shared.model.ToolInvocationResult;
 import org.finos.ai.demo.worker.credit.CheckCreditScoreWorker;
@@ -88,18 +90,28 @@ public class CreditRiskAwareTerminationHandler implements AgentTerminationHandle
     }
 
     String toolCallId = "required-credit-score-" + UUID.randomUUID();
+    ToolCallRequest toolCall =
+        new ToolCallRequest(toolCallId, LoanApprovalAgentConfigRegistry.CREDIT_SCORE_TOOL_ID);
     LOG.info(
         "Credit score missing for scope {}; dispatching mandatory {} before completing ad-hoc subprocess",
         scopeExecutionId,
         LoanApprovalAgentConfigRegistry.CREDIT_SCORE_TOOL_ID);
 
+    // Anthropic (and similar) require every tool_result to match a tool_use in the previous
+    // assistant message. Inject a synthetic assistant turn so the forced credit-score call is
+    // valid when its result is appended on the next orchestration step.
+    List<ConversationEntry> history =
+        new ArrayList<>(stateManager.loadHistory(runtimeService, scopeExecutionId));
+    history.add(
+        ConversationEntry.assistant(
+            "Credit score is required before completing this assessment.", List.of(toolCall)));
+    stateManager.saveHistory(runtimeService, scopeExecutionId, history);
+    AgentTraceExporter.publishToProcessInstance(
+        stateManager, runtimeService, scopeExecutionId, processInstance.getId());
+
     stateManager.savePendingToolCalls(runtimeService, scopeExecutionId, Set.of(toolCallId));
     ToolInvocationResult result =
-        toolInvocationService.invoke(
-            runtimeService,
-            scopeExecutionId,
-            catalogue,
-            new ToolCallRequest(toolCallId, LoanApprovalAgentConfigRegistry.CREDIT_SCORE_TOOL_ID));
+        toolInvocationService.invoke(runtimeService, scopeExecutionId, catalogue, toolCall);
     if (!result.success()) {
       LOG.warn(
           "Mandatory credit score dispatch failed for scope {}: {}",

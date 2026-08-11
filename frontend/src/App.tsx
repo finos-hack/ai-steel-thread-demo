@@ -580,11 +580,11 @@ export default function App() {
                   </button>
                   <a
                     className="btn ghost"
-                    href={`http://localhost:8080/fluxnova/app/cockpit/default/#/process-instance/${result.processInstanceId}`}
+                    href={`http://localhost:8080/fluxnova/app/monitoring/default/#/process-instance/${result.processInstanceId}`}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Advanced: Cockpit
+                    Advanced: Monitoring
                   </a>
                 </div>
               </div>
