@@ -2,6 +2,8 @@
 
 Standalone Fluxnova Spring Boot demo for AI agentic ad-hoc subprocesses (loan approval).
 
+**Presenter materials:** [DEMO.md](DEMO.md) (click path) and [NARRATION.md](NARRATION.md) (spoken script), also under **Demo guide** in the Launch UI.
+
 ## Requirements
 
 - Java 21+

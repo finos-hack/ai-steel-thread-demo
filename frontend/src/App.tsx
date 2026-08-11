@@ -18,17 +18,33 @@ import { ComplianceEvidenceReport } from './ComplianceEvidenceReport'
 import { HumanTaskInbox } from './HumanTaskInbox'
 import { ProcessStatusLog } from './ProcessStatusLog'
 import { UseCaseGovernance } from './UseCaseGovernance'
+import { DemoGuide, type DemoGuideTab } from './DemoGuide'
 import { TokenomicsPanel } from './TokenomicsPanel'
 import { loanApprovalUseCase, useCaseCatalog, useCaseById } from './useCases'
 import './App.css'
 
-type Screen = 'catalog' | 'use-case' | 'loan-form' | 'loan-result' | 'tokenomics'
+type Screen = 'catalog' | 'use-case' | 'loan-form' | 'loan-result' | 'tokenomics' | 'demo-guide'
 type StringLike = string | null
 
 const INSTANCE_POLL_MS = 4000
 
+function readDemoGuideTab(): DemoGuideTab {
+  const tab = new URLSearchParams(window.location.search).get('tab')
+  return tab === 'narration' ? 'narration' : 'guide'
+}
+
+function readPresenterMode(): boolean {
+  return new URLSearchParams(window.location.search).get('presenter') === '1'
+}
+
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('catalog')
+  const [presenterMode] = useState(readPresenterMode)
+  const [demoGuideTab] = useState<DemoGuideTab>(readDemoGuideTab)
+  const [screen, setScreen] = useState<Screen>(() =>
+    presenterMode || new URLSearchParams(window.location.search).get('screen') === 'demo-guide'
+      ? 'demo-guide'
+      : 'catalog',
+  )
   const [selectedUseCaseId, setSelectedUseCaseId] = useState<UseCaseId | null>(null)
   const [showCalmVisualizer, setShowCalmVisualizer] = useState(false)
   const [options, setOptions] = useState<LoanApprovalOptions | null>(null)
@@ -185,29 +201,47 @@ export default function App() {
           : 'Started'
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${presenterMode ? ' is-presenter-shell' : ''}`}>
       <div className="mesh" aria-hidden="true" />
       <header className="topbar">
-        <button type="button" className="brand" onClick={openCatalog} aria-label="Use case catalog">
+        <button
+          type="button"
+          className="brand"
+          onClick={presenterMode ? undefined : openCatalog}
+          aria-label={presenterMode ? 'Presenter window' : 'Use case catalog'}
+        >
           <img className="brand-logo" src="/logos/finos.png" alt="FINOS" />
-          <span className="brand-title">AI Steel Thread Demo</span>
+          <span className="brand-title">
+            {presenterMode ? 'AI Steel Thread · Presenter' : 'AI Steel Thread Demo'}
+          </span>
         </button>
-        <nav className="topbar-nav" aria-label="Primary">
-          <button
-            type="button"
-            className={`topbar-nav-link${screen === 'catalog' ? ' is-active' : ''}`}
-            onClick={openCatalog}
-          >
-            Catalog
-          </button>
-          <button
-            type="button"
-            className={`topbar-nav-link${screen === 'tokenomics' ? ' is-active' : ''}`}
-            onClick={() => setScreen('tokenomics')}
-          >
-            Tokenomics
-          </button>
-        </nav>
+        {!presenterMode ? (
+          <nav className="topbar-nav" aria-label="Primary">
+            <button
+              type="button"
+              className={`topbar-nav-link${screen === 'catalog' ? ' is-active' : ''}`}
+              onClick={openCatalog}
+            >
+              Catalog
+            </button>
+            <button
+              type="button"
+              className={`topbar-nav-link${screen === 'tokenomics' ? ' is-active' : ''}`}
+              onClick={() => setScreen('tokenomics')}
+            >
+              Tokenomics
+            </button>
+            <button
+              type="button"
+              className={`topbar-nav-link${screen === 'demo-guide' ? ' is-active' : ''}`}
+              onClick={() => setScreen('demo-guide')}
+            >
+              Demo guide
+            </button>
+          </nav>
+        ) : (
+          <p className="presenter-banner">Keep beside the main demo window</p>
+        )}
         <img
           className="brand-meta-logo"
           src="/logos/finos-ai-fund.png"
@@ -216,12 +250,20 @@ export default function App() {
       </header>
 
       <main className="stage">
+        {presenterMode ? (
+          <DemoGuide presenterWindow initialTab={demoGuideTab} />
+        ) : (
+          <>
         {screen === 'catalog' && (
           <section className="hero enter">
             <h1 className="brand-hero">AI Steel Thread Demo</h1>
             <p className="lede">
               Choose a FINOS AI Governance Framework use case to launch agentic process instances
-              with the controls that use case needs.
+              with the controls that use case needs. New here? Open the{' '}
+              <button type="button" className="text-link" onClick={() => setScreen('demo-guide')}>
+                Demo guide
+              </button>
+              .
             </p>
             <div className="home-columns">
               <div className="use-case-catalog">
@@ -461,6 +503,10 @@ export default function App() {
           </section>
         )}
 
+        {screen === 'demo-guide' && (
+          <DemoGuide onBack={openCatalog} initialTab={demoGuideTab} />
+        )}
+
         {screen === 'loan-form' && (
           <section className="panel enter">
             <div className="panel-head">
@@ -601,9 +647,11 @@ export default function App() {
             </div>
           </section>
         )}
+          </>
+        )}
       </main>
 
-      {showCalmVisualizer && selectedUseCase ? (
+      {!presenterMode && showCalmVisualizer && selectedUseCase ? (
         <CalmArchitectureVisualizer
           architectureHref={selectedUseCase.architectureHref}
           calmHubHref={selectedUseCase.calmHubVisualizerHref}

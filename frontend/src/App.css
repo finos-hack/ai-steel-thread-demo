@@ -1732,6 +1732,190 @@
   font-size: 0.95rem;
 }
 
+.text-link {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  color: var(--copper);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.text-link:hover,
+.text-link:focus-visible {
+  color: #e08a55;
+}
+
+.demo-guide-page {
+  max-width: 52rem;
+}
+
+.demo-guide-page.is-presenter {
+  max-width: none;
+}
+
+.app-shell.is-presenter-shell .stage {
+  padding-top: 1rem;
+}
+
+.presenter-banner {
+  margin: 0;
+  color: rgba(232, 237, 244, 0.7);
+  font-size: 0.88rem;
+  font-weight: 550;
+}
+
+.demo-guide-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-top: 1rem;
+}
+
+.demo-guide-tabs {
+  display: inline-flex;
+  gap: 0.35rem;
+  margin-top: 0;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: rgba(10, 14, 20, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(232, 237, 244, 0.1);
+}
+
+.demo-guide-popout {
+  flex-shrink: 0;
+}
+
+.demo-guide-tab {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.45rem 0.95rem;
+  background: transparent;
+  color: rgba(232, 237, 244, 0.72);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.demo-guide-tab.is-active {
+  background: rgba(232, 237, 244, 0.1);
+  color: var(--paper);
+}
+
+.demo-guide-tab:focus-visible {
+  outline: 2px solid rgba(91, 180, 224, 0.55);
+  outline-offset: 2px;
+}
+
+.demo-guide-markdown {
+  margin-top: 1.25rem;
+  color: var(--paper);
+  line-height: 1.55;
+}
+
+.demo-guide-markdown h1,
+.demo-guide-markdown h2,
+.demo-guide-markdown h3 {
+  margin: 1.6rem 0 0.65rem;
+  line-height: 1.25;
+  font-weight: 650;
+}
+
+.demo-guide-markdown h1 {
+  font-size: 1.65rem;
+}
+
+.demo-guide-markdown h2 {
+  font-size: 1.28rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(232, 237, 244, 0.12);
+}
+
+.demo-guide-markdown h3 {
+  font-size: 1.05rem;
+}
+
+.demo-guide-markdown p,
+.demo-guide-markdown ul,
+.demo-guide-markdown ol,
+.demo-guide-markdown table,
+.demo-guide-markdown pre,
+.demo-guide-markdown blockquote {
+  margin: 0 0 0.9rem;
+}
+
+.demo-guide-markdown ul,
+.demo-guide-markdown ol {
+  padding-left: 1.25rem;
+}
+
+.demo-guide-markdown li + li {
+  margin-top: 0.25rem;
+}
+
+.demo-guide-markdown a {
+  color: var(--copper);
+}
+
+.demo-guide-markdown code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.86em;
+  padding: 0.1em 0.35em;
+  border-radius: 0.3em;
+  background: rgba(232, 237, 244, 0.08);
+}
+
+.demo-guide-markdown pre {
+  overflow-x: auto;
+  padding: 0.9rem 1rem;
+  border-radius: 0.65rem;
+  background: rgba(10, 14, 20, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(232, 237, 244, 0.08);
+}
+
+.demo-guide-markdown pre code {
+  padding: 0;
+  background: none;
+}
+
+.demo-guide-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  overflow-x: auto;
+  display: block;
+}
+
+.demo-guide-markdown th,
+.demo-guide-markdown td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(232, 237, 244, 0.12);
+}
+
+.demo-guide-markdown th {
+  background: rgba(232, 237, 244, 0.06);
+  font-weight: 650;
+}
+
+.demo-guide-markdown hr {
+  border: 0;
+  border-top: 1px solid rgba(232, 237, 244, 0.14);
+  margin: 1.5rem 0;
+}
+
+.demo-guide-markdown strong {
+  font-weight: 650;
+}
+
 .hint.danger {
   color: #ef9a9a;
 }
