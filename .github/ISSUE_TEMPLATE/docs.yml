@@ -1,0 +1,24 @@
+name: Docs
+description: Walkthrough, narration, README, or in-app Demo guide copy
+title: "[Docs] "
+labels: ["type:docs"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: What to change
+      description: Which file or surface (DEMO.md, NARRATION.md, README, in-app guide).
+    validations:
+      required: true
+  - type: dropdown
+    id: release
+    attributes:
+      label: Target release
+      description: Also set the matching GitHub milestone on the issue.
+      options:
+        - v1.1.0
+        - v1.2.0
+        - Backlog
+      default: 0
+    validations:
+      required: true

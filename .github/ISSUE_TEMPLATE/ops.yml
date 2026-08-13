@@ -1,0 +1,23 @@
+name: Ops
+description: Docker, CI, observability, or other infrastructure
+title: "[Ops] "
+labels: ["type:ops"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+    validations:
+      required: true
+  - type: dropdown
+    id: release
+    attributes:
+      label: Target release
+      description: Also set the matching GitHub milestone on the issue.
+      options:
+        - v1.1.0
+        - v1.2.0
+        - Backlog
+      default: 0
+    validations:
+      required: true

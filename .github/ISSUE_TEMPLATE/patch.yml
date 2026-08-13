@@ -1,0 +1,28 @@
+name: Patch
+description: Small fix, chore, or hardening that is not a user-facing bug
+title: "[Patch] "
+labels: ["type:patch"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+    validations:
+      required: true
+  - type: dropdown
+    id: release
+    attributes:
+      label: Target release
+      description: Also set the matching GitHub milestone on the issue.
+      options:
+        - v1.1.0
+        - v1.2.0
+        - Backlog
+      default: 0
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Files, risk, or why this is a patch rather than a feature or bug.

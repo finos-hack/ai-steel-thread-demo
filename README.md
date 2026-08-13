@@ -4,6 +4,8 @@ Standalone Fluxnova Spring Boot demo for AI agentic ad-hoc subprocesses (loan ap
 
 **Presenter materials:** [DEMO.md](DEMO.md) (click path) and [NARRATION.md](NARRATION.md) (spoken script), also under **Demo guide** in the Launch UI.
 
+**Roadmap:** [ROADMAP.md](ROADMAP.md) — work is tracked as [GitHub Issues](https://github.com/finos-hack/ai-steel-thread-demo/issues) with `type:*` labels and a release [milestone](https://github.com/finos-hack/ai-steel-thread-demo/milestones) (`v1.1.0`, `v1.2.0`, or `Backlog`).
+
 ## Requirements
 
 - Java 21+

@@ -1,0 +1,34 @@
+name: Feature
+description: A new capability for the demo or Launch UI
+title: "[Feature] "
+labels: ["type:feature"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What should exist that does not exist today?
+    validations:
+      required: true
+  - type: dropdown
+    id: release
+    attributes:
+      label: Target release
+      description: Also set the matching GitHub milestone on the issue.
+      options:
+        - v1.1.0
+        - v1.2.0
+        - Backlog
+      default: 0
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: Demo value, governance angle, or operator pain.
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: How we will know this is finished.
