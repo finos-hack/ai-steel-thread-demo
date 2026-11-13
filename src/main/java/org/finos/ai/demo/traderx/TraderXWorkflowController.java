@@ -27,13 +27,4 @@ public class TraderXWorkflowController {
   public Map<String, Object> detail(@PathVariable String id) { return service.detail(id); }
   @PostMapping("/instances/{id}/decision")
   public Map<String, Object> decide(@PathVariable String id, @RequestBody TraderXWorkflowService.Decision d) { return service.decide(id, d); }
-  @ExceptionHandler(IllegalStateException.class)
-  @ResponseStatus(HttpStatus.BAD_GATEWAY)
-  public Map<String, String> upstreamError(IllegalStateException ex) {
-    return Map.of("detail", Objects.toString(ex.getMessage(), "TraderX is unavailable"));
-  }
-  @ExceptionHandler(ResponseStatusException.class)
-  public org.springframework.http.ResponseEntity<Map<String,String>> badRequest(ResponseStatusException ex) {
-    return org.springframework.http.ResponseEntity.status(ex.getStatusCode()).body(Map.of("detail", Objects.toString(ex.getReason(), "Invalid request")));
-  }
 }
