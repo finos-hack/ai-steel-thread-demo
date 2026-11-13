@@ -20,7 +20,7 @@ class TraderXRebalanceTest {
   }
   @BeforeAll static void deploy() {
     var cfg = new StandaloneInMemProcessEngineConfiguration();
-    cfg.setJdbcUrl("jdbc:h2:mem:traderx-batch-test;DB_CLOSE_DELAY=-1");
+    cfg.setJdbcUrl("jdbc:h2:mem:traderx-rebalance-test;DB_CLOSE_DELAY=0");
     cfg.setDatabaseSchemaUpdate("true"); cfg.setHistory("full"); cfg.setJobExecutorActivate(false);
     cfg.setBeans(Map.of("traderXRebalanceExecution",new TraderXRebalanceExecution(client,json)));
     engine = cfg.buildProcessEngine();
