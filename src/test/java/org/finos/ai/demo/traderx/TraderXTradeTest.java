@@ -17,7 +17,7 @@ class TraderXTradeTest {
 
   @BeforeAll static void deploy() {
     var cfg = new StandaloneInMemProcessEngineConfiguration();
-    cfg.setJdbcUrl("jdbc:h2:mem:traderx-workflow-test;DB_CLOSE_DELAY=-1");
+    cfg.setJdbcUrl("jdbc:h2:mem:traderx-trade-test;DB_CLOSE_DELAY=0");
     cfg.setDatabaseSchemaUpdate("true");
     cfg.setHistory("full");
     cfg.setJobExecutorActivate(false);
