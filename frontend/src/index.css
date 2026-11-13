@@ -1,14 +1,15 @@
 :root {
-  --ink: #10141c;
-  --ink-soft: #2a3344;
-  --paper: #e8edf4;
-  --paper-dim: #c5cedc;
-  --steel: #5b6b82;
-  --copper: #c46b3a;
-  --copper-deep: #9a4d28;
-  --success: #2f6b4f;
-  --danger: #a33b3b;
-  --glow: rgba(196, 107, 58, 0.28);
+  color-scheme: dark;
+  --ink: light-dark(#f1f3f7, #10141c);
+  --ink-soft: light-dark(#e6e9ef, #2a3344);
+  --paper: light-dark(#1f2d40, #e8edf4);
+  --paper-dim: light-dark(#2d384a, #c5cedc);
+  --steel: light-dark(#394351, #5b6b82);
+  --copper: light-dark(#764023, #c46b3a);
+  --copper-deep: light-dark(#6d371c, #9a4d28);
+  --success: light-dark(#2a6047, #2f6b4f);
+  --danger: light-dark(#652525, #a33b3b);
+  --glow: light-dark(rgba(118, 64, 35, 0.28), rgba(196, 107, 58, 0.28));
 
   --font-display: 'Syne', sans-serif;
   --font-body: 'Instrument Sans', sans-serif;
@@ -40,9 +41,9 @@ body {
   min-width: 320px;
   overflow: hidden;
   background:
-    radial-gradient(1200px 700px at 12% -10%, rgba(91, 107, 130, 0.35), transparent 55%),
+    radial-gradient(1200px 700px at 12% -10%, light-dark(rgba(57, 67, 81, 0.35), rgba(91, 107, 130, 0.35)), transparent 55%),
     radial-gradient(900px 600px at 95% 10%, var(--glow), transparent 50%),
-    linear-gradient(160deg, #0c1018 0%, #151b27 45%, #0f1420 100%);
+    linear-gradient(160deg, light-dark(#f2f4f8, #0c1018) 0%, light-dark(#edf0f6, #151b27) 45%, light-dark(#f0f2f7, #0f1420) 100%);
 }
 
 button,
@@ -58,3 +59,13 @@ button {
 a {
   color: inherit;
 }
+
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+.theme-toggle { flex-shrink: 0; border: 1px solid currentColor; border-radius: 999px; padding: .45rem .8rem; background: transparent; color: var(--paper); font-size: .8rem; white-space: nowrap; }
+.theme-toggle:focus-visible { outline: 3px solid var(--copper); outline-offset: 3px; }
+:root[data-theme="light"] :is(.brand-logo, .brand-meta-logo) { filter: brightness(.3); }
+@media (max-width: 720px) { .topbar { flex-wrap: wrap; gap: .6rem; } .topbar-nav { order: 3; width: 100%; justify-content: center; } .brand-meta-logo { display: none; } }
+:root[data-theme="light"] .finos-project-logo { filter: brightness(.3); }
+:root[data-theme="light"] .catalog-card { background: #ffffff; }
+:root[data-theme="light"] .catalog-card:hover { background: #f5f8fc; }
