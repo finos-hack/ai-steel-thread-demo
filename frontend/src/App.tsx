@@ -21,9 +21,10 @@ import { UseCaseGovernance } from './UseCaseGovernance'
 import { DemoGuide, type DemoGuideTab } from './DemoGuide'
 import { TokenomicsPanel } from './TokenomicsPanel'
 import { loanApprovalUseCase, useCaseCatalog, useCaseById } from './useCases'
+import { traderXWorkflows } from './traderx/registry'
 import './App.css'
 
-type Screen = 'catalog' | 'use-case' | 'loan-form' | 'loan-result' | 'tokenomics' | 'demo-guide'
+type Screen = 'traderx' | 'catalog' | 'use-case' | 'loan-form' | 'loan-result' | 'tokenomics' | 'demo-guide'
 type StringLike = string | null
 
 const INSTANCE_POLL_MS = 4000
@@ -46,6 +47,8 @@ export default function App() {
       : 'catalog',
   )
   const [selectedUseCaseId, setSelectedUseCaseId] = useState<UseCaseId | null>(null)
+  const [traderXId, setTraderXId] = useState('')
+  const TraderXPage = traderXWorkflows.find(w => w.id === traderXId)?.component
   const [showCalmVisualizer, setShowCalmVisualizer] = useState(false)
   const [options, setOptions] = useState<LoanApprovalOptions | null>(null)
   const [optionsError, setOptionsError] = useState<StringLike>(null)
@@ -254,6 +257,7 @@ export default function App() {
           <DemoGuide presenterWindow initialTab={demoGuideTab} />
         ) : (
           <>
+        {screen === 'traderx' && TraderXPage && <TraderXPage onBack={openCatalog} />}
         {screen === 'catalog' && (
           <section className="hero enter">
             <h1 className="brand-hero">AI Steel Thread Demo</h1>
@@ -290,6 +294,7 @@ export default function App() {
                       </button>
                     </li>
                   ))}
+                  {traderXWorkflows.map(w => <li key={w.id}><button className="catalog-card" onClick={() => { setTraderXId(w.id); setScreen('traderx') }}><p className="use-case-label">TraderX · Connected workflow</p><h2 className="catalog-card-title">{w.title}</h2><p className="catalog-card-copy">{w.description}</p><span className="catalog-card-meta">Open workflow →</span></button></li>)}
                 </ul>
               </div>
               <FinosProjectsPanel />
