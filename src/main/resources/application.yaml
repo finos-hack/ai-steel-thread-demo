@@ -132,3 +132,7 @@ logging:
     org.finos.fluxnova.bpm.engine.ai.agent: DEBUG
     org.finos.fluxnova.bpm.client.spring: INFO
     org.finos.ai.demo.worker: INFO
+
+traderx:
+  base-url: ${TRADERX_BASE_URL:http://localhost:18080}
+  public-url: ${TRADERX_PUBLIC_URL:http://localhost:18080}

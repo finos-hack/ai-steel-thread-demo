@@ -48,6 +48,7 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/* \
   && useradd --system --uid 10001 --create-home appuser
 COPY --from=app-build /workspace/app.jar /app/app.jar
+RUN mkdir -p /app/data && chown appuser:appuser /app/data
 USER appuser
 EXPOSE 8080
 ENV JAVA_OPTS=""
