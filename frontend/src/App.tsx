@@ -38,6 +38,18 @@ function readPresenterMode(): boolean {
 }
 
 export default function App() {
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => document.documentElement.dataset.theme === 'light' ? 'light' : 'dark')
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    try { localStorage.setItem('steel-thread-theme', theme) } catch { /* Theme still works when storage is unavailable. */ }
+  }, [theme])
+  useEffect(() => {
+    const sync = (e: StorageEvent) => {
+      if (e.key === 'steel-thread-theme' && (e.newValue === 'dark' || e.newValue === 'light')) setTheme(e.newValue)
+    }
+    window.addEventListener('storage', sync)
+    return () => window.removeEventListener('storage', sync)
+  }, [])
   const [presenterMode] = useState(readPresenterMode)
   const [demoGuideTab] = useState<DemoGuideTab>(readDemoGuideTab)
   const [screen, setScreen] = useState<Screen>(() =>
@@ -242,6 +254,9 @@ export default function App() {
         ) : (
           <p className="presenter-banner">Keep beside the main demo window</p>
         )}
+        <button type="button" className="theme-toggle" aria-label="Light theme" aria-pressed={theme === 'light'} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`} onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}>
+          <span aria-hidden="true">{theme === 'dark' ? '☀' : '☾'}</span> {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+        </button>
         <img
           className="brand-meta-logo"
           src="/logos/finos-ai-fund.png"
