@@ -30,6 +30,8 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318/v1/traces
       JAVA_OPTS: ${JAVA_OPTS:--Xms512m -Xmx1024m}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - demo-data:/app/data
     depends_on:

@@ -39,8 +39,6 @@ function readPresenterMode(): boolean {
 }
 
 export default function App() {
-  const [traderXId,setTraderXId]=useState('')
-  const TraderXPage=traderXWorkflows.find(w => w.id===traderXId)?.component
   const [presenterMode] = useState(readPresenterMode)
   const [demoGuideTab] = useState<DemoGuideTab>(readDemoGuideTab)
   const [screen, setScreen] = useState<Screen>(() =>
@@ -49,6 +47,8 @@ export default function App() {
       : 'catalog',
   )
   const [selectedUseCaseId, setSelectedUseCaseId] = useState<UseCaseId | null>(null)
+  const [traderXId, setTraderXId] = useState('')
+  const TraderXPage = traderXWorkflows.find(w => w.id === traderXId)?.component
   const [showCalmVisualizer, setShowCalmVisualizer] = useState(false)
   const [options, setOptions] = useState<LoanApprovalOptions | null>(null)
   const [optionsError, setOptionsError] = useState<StringLike>(null)
