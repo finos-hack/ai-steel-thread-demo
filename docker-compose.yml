@@ -21,10 +21,17 @@ services:
     ports:
       - "8080:8080"
     environment:
+      TRADERX_BASE_URL: ${TRADERX_BASE_URL:-http://host.docker.internal:18080}
+      TRADERX_PUBLIC_URL: ${TRADERX_PUBLIC_URL:-http://localhost:18080}
+      SPRING_DATASOURCE_URL: jdbc:h2:file:/app/data/demo;DB_CLOSE_ON_EXIT=FALSE
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ""
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318/v1/traces
       JAVA_OPTS: ${JAVA_OPTS:--Xms512m -Xmx1024m}
+    volumes:
+      - demo-data:/app/data
     depends_on:
       - tempo
     healthcheck:
@@ -107,3 +114,6 @@ services:
       - ./docker/calmhub-seed.sh:/seed.sh:ro
     entrypoint: ["/bin/sh", "/seed.sh"]
     restart: "no"
+
+volumes:
+  demo-data:
