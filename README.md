@@ -110,3 +110,7 @@ npx @finos/calm-cli validate \
 ## Observability
 
 See `observability/README.md` for Prometheus / Grafana / Tempo via Docker Compose.
+
+## Optional TraderX workflows
+
+The [TraderX integration guide](docs/traderx.md) explains environment selection and independently installable workflow contributions. Configure the local state-009 ingress host port or explicitly select the public demo using `TRADERX_BASE_URL` and `TRADERX_PUBLIC_URL`.
